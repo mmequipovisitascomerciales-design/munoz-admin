@@ -315,6 +315,10 @@ tr:hover td{background:var(--off-white)}
         <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 10l4.553-2.069A1 1 0 0121 8.82v6.36a1 1 0 01-1.447.894L15 14M3 8a2 2 0 012-2h8a2 2 0 012 2v8a2 2 0 01-2 2H5a2 2 0 01-2-2V8z"/></svg>
         Video portada
       </div>
+      <div class="nav-item" onclick="showSection('portada-web')" id="nav-portada-web">
+        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 12a9 9 0 01-9 9m9-9a9 9 0 00-9-9m9 9H3m9 9a9 9 0 01-9-9m9 9c1.657 0 3-4.03 3-9s-1.343-9-3-9m0 18c-1.657 0-3-4.03-3-9s1.343-9 3-9"/></svg>
+        Portada web
+      </div>
       <div class="nav-section-label">Ventas</div>
       <div class="nav-item" onclick="showSection('presupuestos')" id="nav-presupuestos">
         <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
@@ -467,7 +471,7 @@ function showSection(section) {
   const content = document.getElementById('content');
   content.innerHTML = '<div style="text-align:center;padding:60px;color:var(--text-3)">Cargando...</div>';
   const fns = {
-    dashboard: renderDashboard, articulos: renderArticulos, video: renderVideo,
+    dashboard: renderDashboard, articulos: renderArticulos, video: renderVideo, 'portada-web': renderPortadaWeb,
     presupuestos: renderPresupuestos, sucursales: renderSucursales,
     vendedores: renderVendedores, usuarios: renderUsuarios,
   };
@@ -855,6 +859,198 @@ async function actualizarVideo() {
     if (vid) { vid.src = url; vid.load(); }
     showToast('Video actualizado correctamente', 'success');
   } catch(e) { showToast('Error al actualizar', 'error'); console.error(e); }
+}
+
+
+async function renderPortadaWeb() {
+  // Load current config
+  let tipo = 'video', videoUrl = '', imagenesRaw = '';
+  try {
+    const res = await sb('config_app?select=clave,valor&clave=in.(web_hero_tipo,web_hero_video_url,web_hero_imagenes)');
+    const map = {};
+    (res||[]).forEach(r=>map[r.clave]=r.valor);
+    tipo        = map['web_hero_tipo']      || 'video';
+    videoUrl    = map['web_hero_video_url'] || '';
+    imagenesRaw = map['web_hero_imagenes']  || '';
+  } catch(e) { console.error(e); }
+
+  const imagenes = imagenesRaw.split(',').map(s=>s.trim()).filter(Boolean);
+
+  document.getElementById('content').innerHTML = `
+    <div style="margin-bottom:20px">
+      <div style="display:flex;border:1.5px solid var(--border);overflow:hidden;width:fit-content">
+        <button id="tab-video" onclick="switchPortadaTab('video')" style="height:38px;padding:0 24px;font-size:13px;font-weight:600;cursor:pointer;transition:all .15s;${tipo==='video'?'background:var(--blue);color:#fff;border:none':'background:var(--white);color:var(--text-2);border:none'}">Video</button>
+        <button id="tab-imagenes" onclick="switchPortadaTab('imagenes')" style="height:38px;padding:0 24px;font-size:13px;font-weight:600;cursor:pointer;transition:all .15s;border-left:1.5px solid var(--border);${tipo==='imagenes'?'background:var(--blue);color:#fff;border-left-color:var(--blue)':'background:var(--white);color:var(--text-2)'}">Imágenes</button>
+      </div>
+    </div>
+
+    <!-- VIDEO TAB -->
+    <div id="portada-tab-video" style="display:${tipo==='video'?'grid':'none'};grid-template-columns:1fr 1fr;gap:24px;align-items:start">
+      <div class="table-card" style="padding:24px">
+        <div style="font-size:15px;font-weight:700;margin-bottom:20px">Video de portada (horizontal)</div>
+        <div class="form-group">
+          <label>URL actual</label>
+          <input id="web-video-actual" value="${videoUrl||'Sin video configurado'}" disabled style="background:#eee;font-size:12px"/>
+        </div>
+        <div class="form-group">
+          <label>Nueva URL o subir archivo</label>
+          <input id="web-video-nuevo" placeholder="https://..." oninput="previewWebVideo()"/>
+        </div>
+        <div style="display:flex;align-items:center;gap:8px;margin-top:-8px;margin-bottom:16px">
+          <span style="font-size:12px;color:var(--text-3)">o</span>
+          <label style="cursor:pointer;display:inline-flex;align-items:center;gap:6px;height:30px;padding:0 12px;background:var(--off-white);border:1.5px solid var(--border);font-size:12px;font-weight:600;color:var(--text-2)">
+            <svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12"/></svg>
+            Subir video
+            <input type="file" accept="video/*" style="display:none" onchange="subirArchivoWeb(this,'web-video-nuevo','video',previewWebVideo)"/>
+          </label>
+          <span id="web-video-status" style="font-size:12px;color:var(--text-3)"></span>
+        </div>
+        <button class="btn-primary" onclick="guardarPortadaWeb()" style="width:100%;justify-content:center;height:40px">Guardar cambios</button>
+      </div>
+      <div class="table-card" style="padding:0;overflow:hidden">
+        <div style="padding:14px 20px;border-bottom:1.5px solid var(--border);font-size:14px;font-weight:700">Vista previa</div>
+        <div style="position:relative;aspect-ratio:16/9;background:#0a0f1a;overflow:hidden">
+          <video id="web-video-preview" src="${videoUrl}" autoplay muted loop playsinline style="width:100%;height:100%;object-fit:cover;opacity:.6"></video>
+          <div style="position:absolute;inset:0;background:linear-gradient(135deg,rgba(10,15,30,.7) 0%,rgba(10,15,30,.2) 60%,transparent 100%)"></div>
+          <div style="position:absolute;inset:0;display:flex;flex-direction:column;align-items:flex-start;justify-content:center;padding:8%">
+            <div style="display:inline-flex;align-items:center;gap:6px;background:rgba(55,103,166,.3);border:1px solid rgba(55,103,166,.5);color:#a8c4f0;font-size:10px;font-weight:600;padding:4px 10px;letter-spacing:.08em;text-transform:uppercase;margin-bottom:12px">Equipamiento Comercial</div>
+            <div style="font-size:clamp(14px,2vw,28px);font-weight:900;color:#fff;line-height:1.05;letter-spacing:-.03em;margin-bottom:10px">Equipá tu<br/><span style="color:#5b9cf6">negocio</span><br/>con lo mejor</div>
+            <div style="font-size:clamp(10px,1.2vw,14px);color:rgba(255,255,255,.7);line-height:1.6;margin-bottom:16px">Más de 800 productos para tu emprendimiento.</div>
+            <div style="height:32px;padding:0 16px;background:#3767A6;color:#fff;font-size:12px;font-weight:700;display:flex;align-items:center;gap:6px">Ver catálogo →</div>
+          </div>
+        </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- IMAGENES TAB -->
+    <div id="portada-tab-imagenes" style="display:${tipo==='imagenes'?'block':'none'}">
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:24px;align-items:start">
+        <div class="table-card" style="padding:24px">
+          <div style="font-size:15px;font-weight:700;margin-bottom:20px">Secuencia de imágenes</div>
+          <div style="display:flex;gap:8px;margin-bottom:16px">
+            <input id="img-nueva-url" placeholder="URL de imagen o subí un archivo" style="flex:1;height:36px;padding:0 12px;border:1.5px solid var(--border);background:var(--off-white);font-size:13px;outline:none"/>
+            <label style="cursor:pointer;display:inline-flex;align-items:center;gap:6px;height:36px;padding:0 12px;background:var(--off-white);border:1.5px solid var(--border);font-size:12px;font-weight:600;color:var(--text-2);white-space:nowrap">
+              <svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12"/></svg>
+              Subir
+              <input type="file" accept="image/*" style="display:none" onchange="subirArchivoWeb(this,'img-nueva-url','imagen',null)"/>
+            </label>
+            <button onclick="agregarImagenPortada()" style="height:36px;padding:0 14px;background:var(--blue);color:#fff;font-size:13px;font-weight:600;border:none;cursor:pointer">Agregar</button>
+          </div>
+          <div id="imagenes-portada-list" style="display:flex;flex-direction:column;gap:8px">
+            ${imagenes.map((img,i)=>`
+              <div style="display:flex;align-items:center;gap:8px;padding:8px;background:var(--off-white);border:1.5px solid var(--border)">
+                <img src="${img}" style="width:60px;height:40px;object-fit:cover;flex-shrink:0" onerror="this.style.display='none'"/>
+                <div style="flex:1;font-size:12px;color:var(--text-3);overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${img}</div>
+                <button onclick="eliminarImagenPortada(${i})" style="width:28px;height:28px;background:#fdecea;color:var(--red);font-size:16px;border:none;cursor:pointer;flex-shrink:0">✕</button>
+              </div>`).join('')}
+          </div>
+          <button class="btn-primary" onclick="guardarPortadaWeb()" style="width:100%;justify-content:center;height:40px;margin-top:16px">Guardar cambios</button>
+        </div>
+        <div class="table-card" style="padding:0;overflow:hidden">
+          <div style="padding:14px 20px;border-bottom:1.5px solid var(--border);font-size:14px;font-weight:700">Vista previa</div>
+          <div style="position:relative;aspect-ratio:16/9;background:#0a0f1a;overflow:hidden" id="img-slideshow-preview">
+          ${imagenes.length ? `<img src="${imagenes[0]}" style="width:100%;height:100%;object-fit:cover;opacity:.6"/>` : '<div style="width:100%;height:100%;display:flex;align-items:center;justify-content:center;color:rgba(255,255,255,.3);font-size:14px">Sin imágenes</div>'}
+          <div style="position:absolute;inset:0;background:linear-gradient(135deg,rgba(10,15,30,.7) 0%,rgba(10,15,30,.2) 60%,transparent 100%)"></div>
+          <div style="position:absolute;inset:0;display:flex;flex-direction:column;align-items:flex-start;justify-content:center;padding:8%">
+            <div style="display:inline-flex;align-items:center;gap:6px;background:rgba(55,103,166,.3);border:1px solid rgba(55,103,166,.5);color:#a8c4f0;font-size:10px;font-weight:600;padding:4px 10px;letter-spacing:.08em;text-transform:uppercase;margin-bottom:12px">Equipamiento Comercial</div>
+            <div style="font-size:clamp(14px,2vw,28px);font-weight:900;color:#fff;line-height:1.05;letter-spacing:-.03em;margin-bottom:10px">Equipá tu<br/><span style="color:#5b9cf6">negocio</span><br/>con lo mejor</div>
+            <div style="height:32px;padding:0 16px;background:#3767A6;color:#fff;font-size:12px;font-weight:700;display:flex;align-items:center;gap:6px">Ver catálogo →</div>
+          </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  `;
+
+  // Store current images in memory
+  window._portadaImagenes = imagenes;
+}
+
+function switchPortadaTab(tab) {
+  const isVideo = tab === 'video';
+  document.getElementById('portada-tab-video').style.display = isVideo ? 'grid' : 'none';
+  document.getElementById('portada-tab-imagenes').style.display = isVideo ? 'none' : 'block';
+  document.getElementById('tab-video').style.cssText += isVideo ? ';background:var(--blue);color:#fff' : ';background:var(--white);color:var(--text-2)';
+  document.getElementById('tab-imagenes').style.cssText += isVideo ? ';background:var(--white);color:var(--text-2)' : ';background:var(--blue);color:#fff';
+  window._portadaTab = tab;
+}
+
+function previewWebVideo() {
+  const url = document.getElementById('web-video-nuevo')?.value.trim();
+  const vid = document.getElementById('web-video-preview');
+  if(vid && url) { vid.src = url; vid.load(); }
+}
+
+async function subirArchivoWeb(input, targetId, tipo, callback) {
+  const file = input?.files?.[0];
+  if(!file) return;
+  const status = document.getElementById('web-video-status');
+  if(status) status.textContent = 'Subiendo…';
+
+  const ext = file.name.split('.').pop().toLowerCase();
+  const filename = `web_${Date.now()}.${ext}`;
+  const url = `${SB_URL}/storage/v1/object/imagenes/${filename}`;
+
+  try {
+    const res = await fetch(url, {
+      method:'POST',
+      headers:{'Authorization':`Bearer ${SB_KEY}`,'Content-Type':file.type,'x-upsert':'true'},
+      body: file,
+    });
+    if(!res.ok) throw new Error(await res.text());
+    const publicUrl = `${SB_URL}/storage/v1/object/public/imagenes/${filename}`;
+    const target = document.getElementById(targetId);
+    if(target) target.value = publicUrl;
+    if(callback) callback();
+    if(status) { status.textContent = '✓ Subido'; status.style.color='var(--green)'; setTimeout(()=>{if(status)status.textContent='';},3000); }
+  } catch(e) {
+    console.error(e);
+    if(status) { status.textContent = '✗ Error'; status.style.color='var(--red)'; }
+  }
+}
+
+function agregarImagenPortada() {
+  const url = document.getElementById('img-nueva-url')?.value.trim();
+  if(!url) return;
+  if(!window._portadaImagenes) window._portadaImagenes = [];
+  window._portadaImagenes.push(url);
+  document.getElementById('img-nueva-url').value = '';
+  // Re-render list
+  const list = document.getElementById('imagenes-portada-list');
+  if(list) list.innerHTML = window._portadaImagenes.map((img,i)=>`
+    <div style="display:flex;align-items:center;gap:8px;padding:8px;background:var(--off-white);border:1.5px solid var(--border)">
+      <img src="${img}" style="width:60px;height:40px;object-fit:cover;flex-shrink:0" onerror="this.style.display='none'"/>
+      <div style="flex:1;font-size:12px;color:var(--text-3);overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${img}</div>
+      <button onclick="eliminarImagenPortada(${i})" style="width:28px;height:28px;background:#fdecea;color:var(--red);font-size:16px;border:none;cursor:pointer;flex-shrink:0">✕</button>
+    </div>`).join('');
+}
+
+function eliminarImagenPortada(idx) {
+  window._portadaImagenes.splice(idx, 1);
+  agregarImagenPortada(); // trigger re-render with empty url
+  document.getElementById('img-nueva-url').value = '';
+}
+
+async function guardarPortadaWeb() {
+  const tab = window._portadaTab || (document.getElementById('portada-tab-video').style.display !== 'none' ? 'video' : 'imagenes');
+  const updates = [];
+
+  if(tab === 'video') {
+    const url = document.getElementById('web-video-nuevo')?.value.trim();
+    if(url) updates.push({ clave:'web_hero_video_url', valor:url });
+    updates.push({ clave:'web_hero_tipo', valor:'video' });
+  } else {
+    updates.push({ clave:'web_hero_tipo', valor:'imagenes' });
+    updates.push({ clave:'web_hero_imagenes', valor:(window._portadaImagenes||[]).join(',') });
+  }
+
+  for(const u of updates) {
+    await sb(`config_app?clave=eq.${u.clave}`, {method:'PATCH', body:{valor:u.valor}, prefer:'return=minimal'});
+  }
+
+  showToast('Portada actualizada', 'success');
+  renderPortadaWeb();
 }
 
 // ══════════════════════════════════════════════
