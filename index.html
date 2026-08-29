@@ -315,6 +315,14 @@ tr:hover td{background:var(--off-white)}
         <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 10l4.553-2.069A1 1 0 0121 8.82v6.36a1 1 0 01-1.447.894L15 14M3 8a2 2 0 012-2h8a2 2 0 012 2v8a2 2 0 01-2 2H5a2 2 0 01-2-2V8z"/></svg>
         Video portada
       </div>
+      <div class="nav-item" onclick="showSection('importar')" id="nav-importar">
+        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M9 19l3 3m0 0l3-3m-3 3V10"/></svg>
+        Importar Excel
+      </div>
+      <div class="nav-item" onclick="showSection('apk')" id="nav-apk">
+        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 18h.01M8 21h8a2 2 0 002-2V5a2 2 0 00-2-2H8a2 2 0 00-2 2v14a2 2 0 002 2z"/></svg>
+        App APK
+      </div>
       <div class="nav-item" onclick="showSection('portada-web')" id="nav-portada-web">
         <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 12a9 9 0 01-9 9m9-9a9 9 0 00-9-9m9 9H3m9 9a9 9 0 01-9-9m9 9c1.657 0 3-4.03 3-9s-1.343-9-3-9m0 18c-1.657 0-3-4.03-3-9s1.343-9 3-9"/></svg>
         Portada web
@@ -471,7 +479,7 @@ function showSection(section) {
   const content = document.getElementById('content');
   content.innerHTML = '<div style="text-align:center;padding:60px;color:var(--text-3)">Cargando...</div>';
   const fns = {
-    dashboard: renderDashboard, articulos: renderArticulos, video: renderVideo, 'portada-web': renderPortadaWeb,
+    dashboard: renderDashboard, articulos: renderArticulos, video: renderVideo, 'portada-web': renderPortadaWeb, apk: renderApk,
     presupuestos: renderPresupuestos, sucursales: renderSucursales,
     vendedores: renderVendedores, usuarios: renderUsuarios,
   };
@@ -796,6 +804,375 @@ async function toggleArticulo(codigo, current) {
 }
 
 
+
+async function renderApk() {
+  // Load current APK info
+  let currentVersion = '', currentUrl = '';
+  try {
+    const res = await sb('config_app?select=clave,valor&clave=in.(app_apk_version,app_apk_url)');
+    const map = {};
+    (res||[]).forEach(r=>map[r.clave]=r.valor);
+    currentVersion = map['app_apk_version'] || '';
+    currentUrl     = map['app_apk_url']     || '';
+  } catch(e) { console.error(e); }
+
+  document.getElementById('content').innerHTML = `
+    <div style="max-width:600px">
+      <div class="table-card" style="padding:24px">
+        <div style="font-size:15px;font-weight:700;margin-bottom:20px">App Android — Gestión de versiones</div>
+        <div style="background:var(--blue-light);border:1.5px solid var(--blue);padding:16px 20px;margin-bottom:24px;font-size:13px">
+          <div style="font-weight:700;margin-bottom:4px">Versión actual en producción</div>
+          <div style="font-family:monospace;font-size:16px;color:var(--blue)">${currentVersion || 'Sin versión cargada'}</div>
+          ${currentUrl ? `<div style="margin-top:8px"><a href="${escAdm(currentUrl)}" style="color:var(--blue);font-size:12px">Descargar APK actual</a></div>` : ''}
+        </div>
+        <div class="form-group">
+          <label>Nombre del archivo APK</label>
+          <div style="font-size:12px;color:var(--text-3);margin-bottom:8px">El nombre debe seguir el formato: <strong>munoz-app-X.X.X.apk</strong> (ej: munoz-app-1.2.0.apk)</div>
+          <input id="apk-version" placeholder="1.2.0" style="margin-bottom:8px"/>
+          <div style="font-size:11px;color:var(--text-3)">Solo ingresá el número de versión (ej: 1.2.0)</div>
+        </div>
+        <div class="form-group">
+          <label>Subir archivo APK</label>
+          <label style="display:flex;align-items:center;gap:8px;height:44px;padding:0 16px;border:1.5px dashed var(--border);background:var(--off-white);cursor:pointer;font-size:13px;color:var(--text-2)">
+            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12"/></svg>
+            <span id="apk-file-label">Seleccioná el archivo .apk</span>
+            <input type="file" accept=".apk" id="apk-file-input" style="display:none" onchange="onApkFileSelected(this)"/>
+          </label>
+          <div id="apk-upload-status" style="font-size:12px;color:var(--text-3);margin-top:6px"></div>
+        </div>
+        <button class="btn-primary" onclick="subirApk()" style="width:100%;justify-content:center;height:44px">
+          <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12"/></svg>
+          Publicar nueva versión
+        </button>
+      </div>
+    </div>
+  `;
+}
+
+function onApkFileSelected(input) {
+  const file = input?.files?.[0];
+  if(file) document.getElementById('apk-file-label').textContent = file.name;
+}
+
+async function subirApk() {
+  const version = document.getElementById('apk-version').value.trim();
+  const input   = document.getElementById('apk-file-input');
+  const file    = input?.files?.[0];
+  const status  = document.getElementById('apk-upload-status');
+
+  if(!version) { showToast('Ingresá el número de versión','error'); return; }
+  if(!file)    { showToast('Seleccioná un archivo APK','error'); return; }
+
+  const filename = `munoz-app-${version}.apk`;
+  status.textContent = 'Subiendo APK...';
+  status.style.color = 'var(--text-3)';
+
+  try {
+    const url = `${SB_URL}/storage/v1/object/imagenes/${filename}`;
+    const res = await fetch(url, {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${SB_KEY}`,
+        'Content-Type': 'application/octet-stream',
+        'x-upsert': 'true',
+      },
+      body: file,
+    });
+    if(!res.ok) throw new Error(await res.text());
+
+    const publicUrl = `${SB_URL}/storage/v1/object/public/imagenes/${filename}`;
+
+    // Save version and URL to config_app
+    for(const [clave, valor] of [['app_apk_version', version], ['app_apk_url', publicUrl]]) {
+      const exists = await sb(`config_app?clave=eq.${clave}&select=clave`);
+      if(exists?.length) {
+        await sb(`config_app?clave=eq.${clave}`, {method:'PATCH', body:{valor}, prefer:'return=minimal'});
+      } else {
+        await sb('config_app', {method:'POST', body:{clave, valor}, prefer:'return=minimal'});
+      }
+    }
+
+    status.textContent = `✓ Versión ${version} publicada`;
+    status.style.color = 'var(--green)';
+    showToast(`APK v${version} publicado`, 'success');
+    setTimeout(() => renderApk(), 1500);
+  } catch(e) {
+    console.error(e);
+    status.textContent = '✗ Error al subir';
+    status.style.color = 'var(--red)';
+    showToast('Error al publicar APK', 'error');
+  }
+}
+
+
+// ── IMPORTAR EXCEL ──────────────────────────────────────
+async function renderImportar() {
+  document.getElementById('content').innerHTML = `
+    <div style="max-width:640px">
+      <div class="table-card" style="padding:24px;margin-bottom:20px">
+        <div style="font-size:15px;font-weight:700;margin-bottom:8px">Importar artículos desde Excel</div>
+        <div style="font-size:13px;color:var(--text-3);margin-bottom:20px;line-height:1.6">
+          El archivo debe tener el formato estándar:<br/>
+          <strong>Columna A</strong> — Código | <strong>B</strong> — Descripción | <strong>D</strong> — Stock | <strong>E</strong> — Precio<br/>
+          Los artículos existentes solo actualizan precio y stock. Los nuevos se crean en categoría "bazar".
+        </div>
+        <div class="form-group">
+          <label>Archivo Excel (.xlsx)</label>
+          <label style="display:flex;align-items:center;gap:8px;height:44px;padding:0 16px;border:1.5px dashed var(--border);background:var(--off-white);cursor:pointer;font-size:13px;color:var(--text-2)">
+            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 17v-2m3 2v-4m3 4v-6m2 10H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
+            <span id="xlsx-label">Seleccioná el archivo .xlsx</span>
+            <input type="file" accept=".xlsx,.xls" id="xlsx-input" style="display:none" onchange="onXlsxSelected(this)"/>
+          </label>
+        </div>
+        <button class="btn-primary" onclick="procesarExcel()" style="width:100%;justify-content:center;height:44px">
+          Procesar e importar
+        </button>
+        <div id="import-log" style="margin-top:16px;font-size:12px;font-family:monospace;background:var(--off-white);border:1.5px solid var(--border);padding:12px;max-height:300px;overflow-y:auto;display:none"></div>
+      </div>
+    </div>
+  `;
+}
+
+let xlsxFile = null;
+function onXlsxSelected(input) {
+  xlsxFile = input?.files?.[0];
+  if(xlsxFile) document.getElementById('xlsx-label').textContent = xlsxFile.name;
+}
+
+async function procesarExcel() {
+  if(!xlsxFile) { showToast('Seleccioná un archivo Excel','error'); return; }
+  const log = document.getElementById('import-log');
+  log.style.display = 'block';
+  log.textContent = 'Leyendo archivo...\n';
+
+  try {
+    // Read file as ArrayBuffer
+    const buffer = await xlsxFile.arrayBuffer();
+    const uint8 = new Uint8Array(buffer);
+
+    // Parse XLSX manually (basic binary parsing for our known format)
+    // Use a simple CSV-like approach via FileReader
+    const reader = new FileReader();
+    reader.onload = async (e) => {
+      try {
+        // Use SheetJS via CDN
+        if(!window.XLSX) {
+          const script = document.createElement('script');
+          script.src = 'https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js';
+          document.head.appendChild(script);
+          await new Promise(r => script.onload = r);
+        }
+        const workbook = window.XLSX.read(e.target.result, {type:'array'});
+        const sheet = workbook.Sheets[workbook.SheetNames[0]];
+        const rows = window.XLSX.utils.sheet_to_json(sheet, {header:1, defval:''});
+
+        log.textContent += `Filas encontradas: ${rows.length}\n`;
+
+        let nuevos=0, actualizados=0, errores=0;
+
+        for(let i=1; i<rows.length; i++) {
+          const row = rows[i];
+          const codigo = String(row[0]||'').trim().replace(/\.0$/,'');
+          const nombre = String(row[1]||'').trim();
+          const stock  = parseInt(row[3])||0;
+          const precio = parseFloat(String(row[4]||'').replace(/[^0-9.]/g,''))||0;
+          if(!codigo||!nombre) continue;
+
+          try {
+            const exists = await sb(\`articulos?codigo=eq.\${codigo}&select=codigo\`);
+            if(exists?.length) {
+              await sb(\`articulos?codigo=eq.\${codigo}\`, {method:'PATCH', body:{precio,stock}, prefer:'return=minimal'});
+              actualizados++;
+            } else {
+              await sb('articulos', {method:'POST', prefer:'return=minimal', body:{
+                codigo, nombre_original:nombre, precio, stock,
+                categoria_clave:'bazar', activo:true
+              }});
+              nuevos++;
+            }
+            log.textContent += \`[\${i}] \${codigo} — OK\n\`;
+          } catch(err) {
+            errores++;
+            log.textContent += \`[\${i}] \${codigo} — ERROR: \${err.message.slice(0,50)}\n\`;
+          }
+          log.scrollTop = log.scrollHeight;
+        }
+
+        log.textContent += \`\n✓ Completado: \${nuevos} nuevos, \${actualizados} actualizados, \${errores} errores\`;
+        showToast(\`Importación: \${nuevos} nuevos, \${actualizados} actualizados\`,'success');
+      } catch(err) {
+        log.textContent += 'Error: ' + err.message;
+      }
+    };
+    reader.readAsArrayBuffer(xlsxFile);
+  } catch(e) {
+    log.textContent += 'Error: ' + e.message;
+  }
+}
+
+// ── REPORTES ─────────────────────────────────────────────
+function showReportes() {
+  openModal('Exportar reportes', `
+    <div style="display:flex;flex-direction:column;gap:12px">
+      <div class="form-row">
+        <div class="form-group"><label>Desde</label><input type="date" id="rep-from"/></div>
+        <div class="form-group"><label>Hasta</label><input type="date" id="rep-to"/></div>
+      </div>
+      <div class="form-row">
+        <div class="form-group">
+          <label>Sucursal</label>
+          <select id="rep-suc">
+            <option value="">Todas</option>
+            <option value="WEB">Web</option>
+            ${sucursales.map(s=>`<option value="${s.id}">${s.nombre}</option>`).join('')}
+          </select>
+        </div>
+        <div class="form-group">
+          <label>Vendedor</label>
+          <select id="rep-vend">
+            <option value="">Todos</option>
+            ${vendedores.map(v=>`<option value="${v.nombre}">${v.nombre}</option>`).join('')}
+          </select>
+        </div>
+      </div>
+      <div class="form-group">
+        <label>Tipo de reporte</label>
+        <select id="rep-tipo">
+          <option value="presupuestos">Presupuestos completos</option>
+          <option value="articulos_mas_pedidos">Artículos más presupuestados</option>
+          <option value="por_sucursal">Comparativa por sucursal</option>
+          <option value="por_vendedor">Por vendedor</option>
+        </select>
+      </div>
+    </div>
+  `, [
+    {label:'Cancelar', cls:'btn-sm', action:closeModal},
+    {label:'Exportar Excel', cls:'btn-sm btn-edit', action:()=>exportarExcel()},
+    {label:'Exportar PDF', cls:'btn-sm', style:'background:var(--red);color:#fff', action:()=>exportarPDF()},
+  ]);
+}
+
+async function fetchReportData() {
+  const from  = document.getElementById('rep-from')?.value;
+  const to    = document.getElementById('rep-to')?.value;
+  const sucId = document.getElementById('rep-suc')?.value;
+  const vend  = document.getElementById('rep-vend')?.value;
+
+  let query = 'presupuestos?select=*,clientes(nombre,telefono),sucursales(nombre),presupuesto_items(*)&order=fecha.desc&limit=1000';
+  if(from) query += `&fecha=gte.${from}T00:00:00`;
+  if(to)   query += `&fecha=lte.${to}T23:59:59`;
+  if(sucId && sucId !== 'WEB') query += `&sucursal_id=eq.${sucId}`;
+
+  let data = await sb(query);
+  if(sucId === 'WEB') data = data.filter(p=>!p.sucursal_id);
+  if(vend) data = data.filter(p=>p.vendedor_nombre===vend);
+  return data;
+}
+
+async function exportarExcel() {
+  showToast('Generando Excel...','');
+  const tipo = document.getElementById('rep-tipo')?.value;
+  const data = await fetchReportData();
+
+  if(!window.XLSX) {
+    const script = document.createElement('script');
+    script.src = 'https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js';
+    document.head.appendChild(script);
+    await new Promise(r => script.onload = r);
+  }
+
+  let wb, rows, headers;
+
+  if(tipo === 'articulos_mas_pedidos') {
+    const countMap = {};
+    data.forEach(p => (p.presupuesto_items||[]).forEach(i => {
+      const k = i.codigo_articulo + '|' + i.nombre;
+      countMap[k] = (countMap[k]||0) + i.cantidad;
+    }));
+    headers = ['Código','Artículo','Total presupuestado'];
+    rows = Object.entries(countMap).sort((a,b)=>b[1]-a[1]).map(([k,v])=>{
+      const [cod,nom] = k.split('|');
+      return [cod, nom, v];
+    });
+  } else if(tipo === 'por_sucursal') {
+    const sucMap = {};
+    data.forEach(p => {
+      const suc = p.sucursales?.nombre || 'WEB';
+      if(!sucMap[suc]) sucMap[suc] = {count:0, total:0};
+      sucMap[suc].count++;
+      sucMap[suc].total += parseFloat(p.total)||0;
+    });
+    headers = ['Sucursal','Cantidad presupuestos','Total estimado'];
+    rows = Object.entries(sucMap).map(([s,v])=>[s, v.count, Math.round(v.total)]);
+  } else if(tipo === 'por_vendedor') {
+    const vendMap = {};
+    data.forEach(p => {
+      const v = p.vendedor_nombre || 'Sin asignar';
+      if(!vendMap[v]) vendMap[v] = {count:0, total:0};
+      vendMap[v].count++;
+      vendMap[v].total += parseFloat(p.total)||0;
+    });
+    headers = ['Vendedor','Cantidad presupuestos','Total estimado'];
+    rows = Object.entries(vendMap).map(([v,d])=>[v, d.count, Math.round(d.total)]);
+  } else {
+    headers = ['#','Fecha','Cliente','Teléfono','Sucursal','Vendedor','Plan','Total'];
+    rows = data.map(p => [
+      p.id,
+      p.fecha ? new Date(p.fecha).toLocaleDateString('es-AR') : '',
+      p.clientes?.nombre||'',
+      p.clientes?.telefono||'',
+      p.sucursales?.nombre||'WEB',
+      p.vendedor_nombre||'',
+      p.plan_pago||'',
+      Math.round(p.total||0),
+    ]);
+  }
+
+  const ws = window.XLSX.utils.aoa_to_sheet([headers, ...rows]);
+  wb = window.XLSX.utils.book_new();
+  window.XLSX.utils.book_append_sheet(wb, ws, 'Reporte');
+  window.XLSX.writeFile(wb, `reporte_munoz_${Date.now()}.xlsx`);
+  closeModal();
+  showToast('Excel generado','success');
+}
+
+async function exportarPDF() {
+  const data = await fetchReportData();
+  const fecha = new Date().toLocaleDateString('es-AR');
+  const rows = data.map(p=>`
+    <tr>
+      <td>${p.id}</td>
+      <td>${p.fecha?new Date(p.fecha).toLocaleDateString('es-AR'):''}</td>
+      <td>${p.clientes?.nombre||''}</td>
+      <td>${p.sucursales?.nombre||'WEB'}</td>
+      <td>${p.vendedor_nombre||''}</td>
+      <td>${p.plan_pago||''}</td>
+      <td>$${Math.round(p.total||0).toLocaleString('es-AR')}</td>
+    </tr>`).join('');
+
+  const win = window.open('','_blank');
+  win.document.write(`<!DOCTYPE html><html><head><meta charset="UTF-8"/>
+    <style>body{font-family:Arial,sans-serif;font-size:12px;padding:32px}
+    h2{color:#3767A6;margin-bottom:4px}
+    table{width:100%;border-collapse:collapse;margin-top:16px}
+    th{background:#3767A6;color:#fff;padding:8px;text-align:left;font-size:11px}
+    td{padding:7px 8px;border-bottom:1px solid #eee}
+    tr:nth-child(even) td{background:#f9f9f9}
+    .total{text-align:right;margin-top:12px;font-weight:700;color:#3767A6}
+    </style></head><body>
+    <h2>Muñoz Marchesi — Reporte de Presupuestos</h2>
+    <div style="font-size:11px;color:#888">Generado: ${fecha}</div>
+    <table>
+      <thead><tr><th>#</th><th>Fecha</th><th>Cliente</th><th>Sucursal</th><th>Vendedor</th><th>Plan</th><th>Total</th></tr></thead>
+      <tbody>${rows}</tbody>
+    </table>
+    <div class="total">Total registros: ${data.length} | Monto total: $${Math.round(data.reduce((s,p)=>s+(parseFloat(p.total)||0),0)).toLocaleString('es-AR')}</div>
+    </body></html>`);
+  win.document.close();
+  setTimeout(()=>win.print(), 500);
+  closeModal();
+}
+
 async function renderVideo() {
   // Load current video URL from config_app
   let currentUrl = '';
@@ -951,12 +1328,7 @@ async function renderPortadaWeb() {
           <div style="padding:14px 20px;border-bottom:1.5px solid var(--border);font-size:14px;font-weight:700">Vista previa</div>
           <div style="position:relative;aspect-ratio:16/9;background:#0a0f1a;overflow:hidden" id="img-slideshow-preview">
           ${imagenes.length ? `<img src="${imagenes[0]}" style="width:100%;height:100%;object-fit:cover;opacity:.6"/>` : '<div style="width:100%;height:100%;display:flex;align-items:center;justify-content:center;color:rgba(255,255,255,.3);font-size:14px">Sin imágenes</div>'}
-          <div style="position:absolute;inset:0;background:linear-gradient(135deg,rgba(10,15,30,.7) 0%,rgba(10,15,30,.2) 60%,transparent 100%)"></div>
-          <div style="position:absolute;inset:0;display:flex;flex-direction:column;align-items:flex-start;justify-content:center;padding:8%">
-            <div style="display:inline-flex;align-items:center;gap:6px;background:rgba(55,103,166,.3);border:1px solid rgba(55,103,166,.5);color:#a8c4f0;font-size:10px;font-weight:600;padding:4px 10px;letter-spacing:.08em;text-transform:uppercase;margin-bottom:12px">Equipamiento Comercial</div>
-            <div style="font-size:clamp(14px,2vw,28px);font-weight:900;color:#fff;line-height:1.05;letter-spacing:-.03em;margin-bottom:10px">Equipá tu<br/><span style="color:#5b9cf6">negocio</span><br/>con lo mejor</div>
-            <div style="height:32px;padding:0 16px;background:#3767A6;color:#fff;font-size:12px;font-weight:700;display:flex;align-items:center;gap:6px">Ver catálogo →</div>
-          </div>
+
           </div>
         </div>
       </div>
@@ -1063,6 +1435,10 @@ async function renderPresupuestos() {
     <div class="table-card">
       <div class="table-header">
         <div class="table-header-title">Presupuestos</div>
+        <button class="btn-primary" onclick="showReportes()" style="background:var(--green)">
+          <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 17v-2m3 2v-4m3 4v-6m2 10H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
+          Exportar / Reportes
+        </button>
         <input class="search-input" id="pres-search" placeholder="Buscar cliente…" oninput="loadPresupuestos()"/>
         <select class="filter-select" id="pres-suc" onchange="loadPresupuestos()">
           <option value="">Todas las sucursales</option>
@@ -1098,7 +1474,7 @@ async function loadPresupuestos() {
     const fecha = p.fecha ? new Date(p.fecha).toLocaleString('es-AR',{timeZone:'America/Argentina/Buenos_Aires'}) : '—';
     const nombre = p.clientes?.nombre || '—';
     const tel    = p.clientes?.telefono || '—';
-    const sucNombre = p.sucursales?.nombre || '—';
+    const sucNombre = p.sucursales?.nombre || (p.sucursal_id ? '—' : 'WEB');
     return `
       <tr>
         <td>${p.id}</td>
