@@ -979,9 +979,9 @@ async function procesarExcel() {
           if(!codigo||!nombre) continue;
 
           try {
-            const exists = await sb(\`articulos?codigo=eq.\${codigo}&select=codigo\`);
+            const exists = await sb(`articulos?codigo=eq.${codigo}&select=codigo`);
             if(exists?.length) {
-              await sb(\`articulos?codigo=eq.\${codigo}\`, {method:'PATCH', body:{precio,stock}, prefer:'return=minimal'});
+              await sb(`articulos?codigo=eq.${codigo}`, {method:'PATCH', body:{precio,stock}, prefer:'return=minimal'});
               actualizados++;
             } else {
               await sb('articulos', {method:'POST', prefer:'return=minimal', body:{
@@ -990,16 +990,16 @@ async function procesarExcel() {
               }});
               nuevos++;
             }
-            log.textContent += \`[\${i}] \${codigo} — OK\n\`;
+            log.textContent += `[${i}] ${codigo} — OK\n`;
           } catch(err) {
             errores++;
-            log.textContent += \`[\${i}] \${codigo} — ERROR: \${err.message.slice(0,50)}\n\`;
+            log.textContent += `[${i}] ${codigo} — ERROR: ${err.message.slice(0,50)}\n`;
           }
           log.scrollTop = log.scrollHeight;
         }
 
-        log.textContent += \`\n✓ Completado: \${nuevos} nuevos, \${actualizados} actualizados, \${errores} errores\`;
-        showToast(\`Importación: \${nuevos} nuevos, \${actualizados} actualizados\`,'success');
+        log.textContent += `\n✓ Completado: ${nuevos} nuevos, ${actualizados} actualizados, ${errores} errores`;
+        showToast(`Importación: ${nuevos} nuevos, ${actualizados} actualizados`,'success');
       } catch(err) {
         log.textContent += 'Error: ' + err.message;
       }
