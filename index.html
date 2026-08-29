@@ -868,7 +868,7 @@ async function subirApk() {
   status.style.color = 'var(--text-3)';
 
   try {
-    const url = `${SB_URL}/storage/v1/object/imagenes/${filename}`;
+    const url = `${SB_URL}/storage/v1/object/apks/${filename}`;
     const res = await fetch(url, {
       method: 'POST',
       headers: {
@@ -880,7 +880,7 @@ async function subirApk() {
     });
     if(!res.ok) throw new Error(await res.text());
 
-    const publicUrl = `${SB_URL}/storage/v1/object/public/imagenes/${filename}`;
+    const publicUrl = `${SB_URL}/storage/v1/object/public/apks/${filename}`;
 
     // Save version and URL to config_app
     for(const [clave, valor] of [['app_apk_version', version], ['app_apk_url', publicUrl]]) {
