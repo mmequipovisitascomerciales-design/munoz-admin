@@ -2015,6 +2015,16 @@ function formatCodigo(c) {
   return n.length === 4 ? '0'+n : n;
 }
 
+function roundMarkup(base){
+  const v = parseFloat(base)||0;
+  const m = v * 1.05;
+  if(m<1000)    return Math.round(m/10)*10;
+  if(m<10000)   return Math.round(m/100)*100;
+  if(m<100000)  return Math.round(m/500)*500;
+  if(m<1000000) return Math.round(m/1000)*1000;
+  return Math.round(m/10000)*10000;
+}
+  
 function esc(s) {
   return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#039;');
 }
