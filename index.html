@@ -481,7 +481,7 @@ function showSection(section) {
   const content = document.getElementById('content');
   content.innerHTML = '<div style="text-align:center;padding:60px;color:var(--text-3)">Cargando...</div>';
   const fns = {
-    dashboard: renderDashboard, articulos: renderArticulos, importar: renderImportar, video: renderVideo, 'portada-web': renderPortadaWeb, apk: renderApk, presupuestos: renderPresupuestos,
+    dashboard: renderDashboard, articulos: renderArticulos, video: renderVideo, 'portada-web': renderPortadaWeb, apk: renderApk,
     presupuestos: renderPresupuestos, sucursales: renderSucursales,
     vendedores: renderVendedores, usuarios: renderUsuarios,
   };
@@ -870,7 +870,7 @@ async function subirApk() {
   status.style.color = 'var(--text-3)';
 
   try {
-    const url = `${SB_URL}/storage/v1/object/apks/${filename}`;
+    const url = `${SB_URL}/storage/v1/object/imagenes/${filename}`;
     const res = await fetch(url, {
       method: 'POST',
       headers: {
@@ -882,7 +882,7 @@ async function subirApk() {
     });
     if(!res.ok) throw new Error(await res.text());
 
-    const publicUrl = `${SB_URL}/storage/v1/object/public/apks/${filename}`;
+    const publicUrl = `${SB_URL}/storage/v1/object/public/imagenes/${filename}`;
 
     // Save version and URL to config_app
     for(const [clave, valor] of [['app_apk_version', version], ['app_apk_url', publicUrl]]) {
@@ -1364,15 +1364,18 @@ function previewWebVideo() {
   if(vid && url) { vid.src = url; vid.load(); }
 }
 
-async function subirArchivoWeb(input, targetId, tipo, callback) {
+async async function subirArchivoWeb(input, targetId, tipo, callback) {
   const file = input?.files?.[0];
   if(!file) return;
-  const status = document.getElementById('web-video-status');
-  if(status) status.textContent = 'Subiendo…';
+  const statusId = targetId === 'kiosk-video-nuevo' ? 'kiosk-video-status' : 'web-video-status';
+  const status = document.getElementById(statusId);
+  if(status) { status.textContent = 'Subiendo…'; status.style.color='var(--text-3)'; }
 
   const ext = file.name.split('.').pop().toLowerCase();
-  const filename = `web_${Date.now()}.${ext}`;
-  const url = `${SB_URL}/storage/v1/object/imagenes/${filename}`;
+  const isVideo = ['mp4','mov','webm','avi','mkv'].includes(ext);
+  const bucket = isVideo ? 'videos' : 'imagenes';
+  const filename = `media_${Date.now()}.${ext}`;
+  const url = `${SB_URL}/storage/v1/object/${bucket}/${filename}`;
 
   try {
     const res = await fetch(url, {
@@ -1381,14 +1384,15 @@ async function subirArchivoWeb(input, targetId, tipo, callback) {
       body: file,
     });
     if(!res.ok) throw new Error(await res.text());
-    const publicUrl = `${SB_URL}/storage/v1/object/public/imagenes/${filename}`;
+    const publicUrl = `${SB_URL}/storage/v1/object/public/${bucket}/${filename}`;
     const target = document.getElementById(targetId);
     if(target) target.value = publicUrl;
     if(callback) callback();
     if(status) { status.textContent = '✓ Subido'; status.style.color='var(--green)'; setTimeout(()=>{if(status)status.textContent='';},3000); }
   } catch(e) {
     console.error(e);
-    if(status) { status.textContent = '✗ Error'; status.style.color='var(--red)'; }
+    if(status) { status.textContent = '✗ Error: '+e.message.slice(0,60); status.style.color='var(--red)'; }
+    showToast('Error al subir','error');
   }
 }
 
@@ -2015,16 +2019,6 @@ function formatCodigo(c) {
   return n.length === 4 ? '0'+n : n;
 }
 
-function roundMarkup(base){
-  const v = parseFloat(base)||0;
-  const m = v * 1.05;
-  if(m<1000)    return Math.round(m/10)*10;
-  if(m<10000)   return Math.round(m/100)*100;
-  if(m<100000)  return Math.round(m/500)*500;
-  if(m<1000000) return Math.round(m/1000)*1000;
-  return Math.round(m/10000)*10000;
-}
-  
 function esc(s) {
   return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#039;');
 }
