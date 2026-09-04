@@ -474,14 +474,14 @@ function showSection(section) {
   const navEl = document.getElementById('nav-'+section);
   if (navEl) navEl.classList.add('active');
   const titles = {
-    dashboard:'Dashboard', articulos:'Artículos', video:'Video de portada', presupuestos:'Presupuestos',
+    dashboard:'Dashboard', articulos:'Artículos', importar:'Importar desde Excel', video:'Video de portada', 'portada-web':'Portada web/app', apk:'App APK', presupuestos:'Presupuestos',
     sucursales:'Sucursales', vendedores:'Vendedores', usuarios:'Usuarios de Gestión'
   };
   document.getElementById('topbar-title').textContent = titles[section] || section;
   const content = document.getElementById('content');
   content.innerHTML = '<div style="text-align:center;padding:60px;color:var(--text-3)">Cargando...</div>';
   const fns = {
-    dashboard: renderDashboard, articulos: renderArticulos, video: renderVideo, 'portada-web': renderPortadaWeb, apk: renderApk,
+    dashboard: renderDashboard, articulos: renderArticulos, importar: renderImportar, video: renderVideo, 'portada-web': renderPortadaWeb, apk: renderApk, presupuestos: renderPresupuestos,
     presupuestos: renderPresupuestos, sucursales: renderSucursales,
     vendedores: renderVendedores, usuarios: renderUsuarios,
   };
