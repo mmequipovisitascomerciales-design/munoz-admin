@@ -1364,7 +1364,7 @@ function previewWebVideo() {
   if(vid && url) { vid.src = url; vid.load(); }
 }
 
-async async function subirArchivoWeb(input, targetId, tipo, callback) {
+async function subirArchivoWeb(input, targetId, tipo, callback) {
   const file = input?.files?.[0];
   if(!file) return;
   const statusId = targetId === 'kiosk-video-nuevo' ? 'kiosk-video-status' : 'web-video-status';
