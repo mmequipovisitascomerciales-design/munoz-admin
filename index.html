@@ -1235,13 +1235,13 @@ async function renderVideo() {
 function escAdm(s) { return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
 
 function previewVideo() {
-  const url = document.getElementById('video-url-nuevo')?.value.trim();
+  const url = document.getElementById('kiosk-video-nuevo')?.value.trim();
   const vid = document.getElementById('preview-video');
   if (vid && url) { vid.src = url; vid.load(); }
 }
 
 async function actualizarVideo() {
-  const url = document.getElementById('video-url-nuevo')?.value.trim();
+  const url = document.getElementById('kiosk-video-nuevo')?.value.trim();
   if (!url) { showToast('Ingresá una URL', 'error'); return; }
   try {
     await sb('config_app?clave=eq.video_portada_url', {
@@ -1249,7 +1249,7 @@ async function actualizarVideo() {
       body: { valor: url }
     });
     document.getElementById('video-url-actual').value = url;
-    document.getElementById('video-url-nuevo').value = '';
+    document.getElementById('kiosk-video-nuevo').value = '';
     const vid = document.getElementById('preview-video');
     if (vid) { vid.src = url; vid.load(); }
     showToast('Video actualizado correctamente', 'success');
