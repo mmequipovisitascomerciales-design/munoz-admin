@@ -1238,9 +1238,9 @@ async function renderVideo() {
           <div class="form-group">
             <label>Distribución de imágenes</label>
             <select id="splash-layout" onchange="cambiarLayout(this.value)" style="height:40px;padding:0 12px;border:1.5px solid var(--border);background:var(--off-white);font-size:13px;outline:none;width:100%">
-              <option value="1x2" ${layout==='1x2'?'selected':''}>Mitad y mitad (1×2)</option>
-              <option value="1x3" ${layout==='1x3'?'selected':''}>Tercios (1×3)</option>
-              <option value="1x4" ${layout==='1x4'?'selected':''}>Cuartos (1×4)</option>
+              <option value="h1x2" ${layout==='h1x2'?'selected':''}>Mitad y mitad (arriba/abajo)</option>
+              <option value="top2x1" ${layout==='top2x1'?'selected':''}>2 arriba + 1 abajo</option>
+              <option value="bot1x2" ${layout==='bot1x2'?'selected':''}>1 arriba + 2 abajo</option>
               <option value="2x2" ${layout==='2x2'?'selected':''}>Cuadrícula 2×2</option>
             </select>
           </div>
@@ -1288,7 +1288,7 @@ function cambiarLayout(val) {
 }
 
 function getSlotCount(layout) {
-  const map = {'1x2':2,'1x3':3,'1x4':4,'2x2':4};
+  const map = {'h1x2':2,'top2x1':3,'bot1x2':3,'2x2':4};
   return map[layout]||4;
 }
 
@@ -1337,22 +1337,55 @@ async function subirImgSlot(input, i) {
   }catch(e){ showToast('Error al subir','error'); }
 }
 
+function buildMosaicHTML(imgs, layout) {
+  const ph = (n) => `<div style="width:100%;height:100%;background:#1a2540;display:flex;align-items:center;justify-content:center;color:rgba(255,255,255,.2);font-size:11px">Imagen ${n}</div>`;
+  const im = (url, n) => url ? `<img src="${url}" style="width:100%;height:100%;object-fit:cover"/>` : ph(n);
+  const i = window._splashImgs||[];
+
+  if(layout === 'h1x2') {
+    // Top half / Bottom half
+    return `<div style="display:grid;grid-template-rows:1fr 1fr;height:100%;width:100%">
+      <div style="overflow:hidden">${im(i[0],1)}</div>
+      <div style="overflow:hidden">${im(i[1],2)}</div>
+    </div>`;
+  } else if(layout === 'top2x1') {
+    // Top: 2 columns, Bottom: 1
+    return `<div style="display:grid;grid-template-rows:1fr 1fr;height:100%;width:100%">
+      <div style="display:grid;grid-template-columns:1fr 1fr;overflow:hidden">
+        <div style="overflow:hidden">${im(i[0],1)}</div>
+        <div style="overflow:hidden">${im(i[1],2)}</div>
+      </div>
+      <div style="overflow:hidden">${im(i[2],3)}</div>
+    </div>`;
+  } else if(layout === 'bot1x2') {
+    // Top: 1, Bottom: 2 columns
+    return `<div style="display:grid;grid-template-rows:1fr 1fr;height:100%;width:100%">
+      <div style="overflow:hidden">${im(i[0],1)}</div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;overflow:hidden">
+        <div style="overflow:hidden">${im(i[1],2)}</div>
+        <div style="overflow:hidden">${im(i[2],3)}</div>
+      </div>
+    </div>`;
+  } else {
+    // 2x2 grid
+    return `<div style="display:grid;grid-template-columns:1fr 1fr;grid-template-rows:1fr 1fr;height:100%;width:100%">
+      <div style="overflow:hidden">${im(i[0],1)}</div>
+      <div style="overflow:hidden">${im(i[1],2)}</div>
+      <div style="overflow:hidden">${im(i[2],3)}</div>
+      <div style="overflow:hidden">${im(i[3],4)}</div>
+    </div>`;
+  }
+}
+
 function actualizarPreviewImgs() {
   const grid=document.getElementById('preview-imgs-grid'); if(!grid) return;
   const layout=window._splashLayout||'2x2';
-  const cols = layout==='1x2'?2:layout==='1x3'?3:layout==='1x4'?4:2;
-  const rows = (layout==='1x2'||layout==='1x3'||layout==='1x4')?1:2;
-  grid.style.gridTemplateColumns=`repeat(${cols},1fr)`;
-  grid.style.gridTemplateRows=`repeat(${rows},1fr)`;
-  const count=cols*rows;
-  grid.innerHTML='';
-  for(let i=0;i<count;i++){
-    const url=(window._splashImgs||[])[i]||'';
-    const div=document.createElement('div');
-    div.style.cssText='overflow:hidden';
-    div.innerHTML=url?`<img src="${url}" style="width:100%;height:100%;object-fit:cover"/>`:`<div style="width:100%;height:100%;background:#1a2540;display:flex;align-items:center;justify-content:center;color:rgba(255,255,255,.2);font-size:11px">Imagen ${i+1}</div>`;
-    grid.appendChild(div);
-  }
+  grid.style.gridTemplateColumns='';
+  grid.style.gridTemplateRows='';
+  grid.style.display='block';
+  grid.style.position='absolute';
+  grid.style.inset='0';
+  grid.innerHTML = buildMosaicHTML(window._splashImgs||[], layout);
 }
 
 async function guardarImagenesSplash() {
