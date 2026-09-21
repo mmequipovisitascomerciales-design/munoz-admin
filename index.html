@@ -825,7 +825,7 @@ async function renderApk() {
         <div style="background:var(--blue-light);border:1.5px solid var(--blue);padding:16px 20px;margin-bottom:24px;font-size:13px">
           <div style="font-weight:700;margin-bottom:4px">Versión actual en producción</div>
           <div style="font-family:monospace;font-size:16px;color:var(--blue)">${currentVersion || 'Sin versión cargada'}</div>
-          ${currentUrl ? `<div style="margin-top:8px"><a href="${escAdm(currentUrl)}" style="color:var(--blue);font-size:12px">Descargar APK actual</a></div>` : ''}
+          ${currentUrl ? `<div style="margin-top:8px"><a href="${esc(currentUrl)}" style="color:var(--blue);font-size:12px">Descargar APK actual</a></div>` : ''}
         </div>
         <div class="form-group">
           <label>Nombre del archivo APK</label>
