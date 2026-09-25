@@ -635,6 +635,78 @@ async function loadArticulos() {
   filterArticulos();
 }
 
+function nuevoArticulo() {
+  const catOpts = categorias.map(c=>`<option value="${c.clave}">${c.label}</option>`).join('');
+  openModal('Nuevo artículo', `
+    <div style="display:grid;grid-template-columns:1fr auto;gap:20px">
+      <div>
+        <div class="form-group"><label>Código</label><input id="n-cod" placeholder="Ej: 00012345"/></div>
+        <div class="form-group"><label>Nombre</label><input id="n-nom" placeholder="Nombre del artículo"/></div>
+        <div class="form-group"><label>Categoría</label><select id="n-cat">${catOpts}</select></div>
+        <div class="form-group"><label>Precio (sin markup)</label><input id="n-precio" type="number" placeholder="0"/></div>
+        <div class="form-group"><label>Stock</label><input id="n-stock" type="number" placeholder="0"/></div>
+        <div class="form-group"><label>Descripción</label><textarea id="n-desc" rows="4" placeholder="Descripción…"></textarea></div>
+        <div class="form-group"><label>URL imagen</label><input id="n-img" placeholder="https://..." oninput="prevImgNuevo()"/></div>
+        <div style="display:flex;align-items:center;gap:8px;margin-top:-8px;margin-bottom:16px">
+          <span style="font-size:12px;color:var(--text-3)">o</span>
+          <label style="cursor:pointer;display:inline-flex;align-items:center;gap:6px;height:30px;padding:0 12px;background:var(--off-white);border:1.5px solid var(--border);font-size:12px;font-weight:600;color:var(--text-2)">
+            ↑ Subir imagen
+            <input type="file" accept="image/*" style="display:none" onchange="uploadImgNuevo(this)"/>
+          </label>
+          <span id="n-img-status" style="font-size:12px;color:var(--text-3)"></span>
+        </div>
+      </div>
+      <div>
+        <div style="font-size:12px;font-weight:700;color:var(--text-3);text-transform:uppercase;letter-spacing:.06em;margin-bottom:6px">Vista previa</div>
+        <div class="img-preview-box" id="n-img-preview-box"></div>
+      </div>
+    </div>`,
+    [{label:'Cancelar',cls:'',action:closeModal},{label:'Crear artículo',cls:'btn-edit',action:crearArticulo}]);
+}
+
+function prevImgNuevo() {
+  const url = document.getElementById('n-img')?.value.trim();
+  const box = document.getElementById('n-img-preview-box');
+  if(!box) return;
+  box.innerHTML = url ? `<img src="${url}" style="width:100%;height:100%;object-fit:contain" onerror="this.parentElement.innerHTML='Error'"/>` : '';
+}
+
+async function uploadImgNuevo(input) {
+  const file = input?.files?.[0]; if(!file) return;
+  const status = document.getElementById('n-img-status');
+  status.textContent = 'Subiendo…';
+  try {
+    const ext = file.name.split('.').pop().toLowerCase();
+    const fname = `art_${Date.now()}.${ext}`;
+    const r = await fetch(`${SB_URL}/storage/v1/object/imagenes/${fname}`, {
+      method:'POST', headers:{'Authorization':`Bearer ${SB_KEY}`,'Content-Type':file.type,'x-upsert':'true'}, body:file
+    });
+    if(!r.ok) throw new Error(await r.text());
+    document.getElementById('n-img').value = `${SB_URL}/storage/v1/object/public/imagenes/${fname}`;
+    prevImgNuevo();
+    status.textContent = '✓'; status.style.color = 'var(--green)';
+  } catch(e) { status.textContent = '✗ Error'; status.style.color = 'var(--red)'; }
+}
+
+async function crearArticulo() {
+  const codigo = document.getElementById('n-cod').value.trim();
+  const nombre = document.getElementById('n-nom').value.trim();
+  if(!codigo || !nombre) { showToast('Código y nombre son obligatorios','error'); return; }
+  const precioBase = parseFloat(document.getElementById('n-precio').value) || 0;
+  const precio = roundMarkup(precioBase);
+  const stock = parseInt(document.getElementById('n-stock').value) || 0;
+  await sb('articulos', {method:'POST', prefer:'return=minimal', body:{
+    codigo, nombre_original:nombre, nombre_custom:null,
+    categoria_clave: document.getElementById('n-cat').value,
+    descripcion: document.getElementById('n-desc').value.trim() || null,
+    imagen_url: document.getElementById('n-img').value.trim() || null,
+    precio, stock, activo:true
+  }});
+  closeModal();
+  await renderArticulos();
+  showToast('Artículo creado','success');
+}
+
 function filterArticulos() {
   artFilter.search   = document.getElementById('art-search')?.value.toLowerCase()||'';
   artFilter.categoria= document.getElementById('art-cat')?.value||'';
