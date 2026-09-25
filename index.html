@@ -619,6 +619,7 @@ async function renderArticulos() {
           <option value="true">Activos</option>
           <option value="false">Inactivos</option>
         </select>
+        <button class="btn-primary" onclick="nuevoArticulo()">+ Nuevo artículo</button>
       </div>
       <div id="art-table-wrap"><div style="text-align:center;padding:40px;color:var(--text-3)">Cargando artículos...</div></div>
       <div class="pagination" id="art-pagination"></div>
@@ -689,14 +690,17 @@ function renderArticulosTable() {
     </table>
   `;
 
-  // Pagination
+  // Pagination - Google style
   let pagBtns = '';
-  for (let i=1; i<=Math.min(pages,10); i++) {
-    pagBtns += `<div class="page-btn ${i===artPage?'active':''}" onclick="goArtPage(${i})">${i}</div>`;
-  }
+  const range = 2;
+  const start = Math.max(1, artPage-range);
+  const end = Math.min(pages, artPage+range);
+  if(start>1){ pagBtns+=`<div class="page-btn" onclick="goArtPage(1)">1</div>`; if(start>2) pagBtns+=`<span style="padding:0 4px;align-self:center;color:var(--text-3)">…</span>`; }
+  for(let i=start;i<=end;i++) pagBtns+=`<div class="page-btn ${i===artPage?'active':''}" onclick="goArtPage(${i})">${i}</div>`;
+  if(end<pages){ if(end<pages-1) pagBtns+=`<span style="padding:0 4px;align-self:center;color:var(--text-3)">…</span>`; pagBtns+=`<div class="page-btn" onclick="goArtPage(${pages})">${pages}</div>`; }
   document.getElementById('art-pagination').innerHTML = `
     <div class="page-info">${total} artículos — pág ${artPage} de ${pages||1}</div>
-    <div class="page-btns">
+    <div class="page-btns" style="display:flex;align-items:center;gap:4px">
       <div class="page-btn" onclick="goArtPage(${artPage-1})">‹</div>
       ${pagBtns}
       <div class="page-btn" onclick="goArtPage(${artPage+1})">›</div>
