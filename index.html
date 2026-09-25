@@ -693,8 +693,8 @@ function renderArticulosTable() {
   // Pagination - Google style
   let pagBtns = '';
   const range = 2;
-  const start = Math.max(1, artPage-range);
-  const end = Math.min(pages, artPage+range);
+  let start = Math.max(1, artPage-range);
+  let end = Math.min(pages, artPage+range);
   if(start>1){ pagBtns+=`<div class="page-btn" onclick="goArtPage(1)">1</div>`; if(start>2) pagBtns+=`<span style="padding:0 4px;align-self:center;color:var(--text-3)">…</span>`; }
   for(let i=start;i<=end;i++) pagBtns+=`<div class="page-btn ${i===artPage?'active':''}" onclick="goArtPage(${i})">${i}</div>`;
   if(end<pages){ if(end<pages-1) pagBtns+=`<span style="padding:0 4px;align-self:center;color:var(--text-3)">…</span>`; pagBtns+=`<div class="page-btn" onclick="goArtPage(${pages})">${pages}</div>`; }
