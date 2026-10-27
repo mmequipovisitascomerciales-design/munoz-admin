@@ -332,6 +332,14 @@ tr:hover td{background:var(--off-white)}
         <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
         Presupuestos
       </div>
+      <div class="nav-item admin-only" onclick="showSection('mapa')" id="nav-mapa">
+        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"/></svg>
+        Mapa dispositivos
+      </div>
+      <div class="nav-item admin-only" onclick="showSection('ofertas')" id="nav-ofertas">
+        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z"/></svg>
+        Ofertas y promos
+      </div>
       <div class="nav-section-label admin-only">Administración</div>
       <div class="nav-item admin-only" onclick="showSection('sucursales')" id="nav-sucursales">
         <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-2 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"/></svg>
@@ -475,6 +483,7 @@ function showSection(section) {
   if (navEl) navEl.classList.add('active');
   const titles = {
     dashboard:'Dashboard', articulos:'Artículos', video:'Video de portada', presupuestos:'Presupuestos',
+    mapa:'Mapa de dispositivos', ofertas:'Ofertas y promociones',
     sucursales:'Sucursales', vendedores:'Vendedores', usuarios:'Usuarios de Gestión'
   };
   document.getElementById('topbar-title').textContent = titles[section] || section;
@@ -482,7 +491,7 @@ function showSection(section) {
   content.innerHTML = '<div style="text-align:center;padding:60px;color:var(--text-3)">Cargando...</div>';
   const fns = {
     dashboard: renderDashboard, articulos: renderArticulos, importar: renderImportar, video: renderVideo, 'portada-web': renderPortadaWeb, apk: renderApk,
-    presupuestos: renderPresupuestos, sucursales: renderSucursales,
+    presupuestos: renderPresupuestos, mapa: renderMapa, ofertas: renderOfertas, sucursales: renderSucursales,
     vendedores: renderVendedores, usuarios: renderUsuarios,
   };
   if (fns[section]) fns[section]();
@@ -705,6 +714,168 @@ async function crearArticulo() {
   closeModal();
   await renderArticulos();
   showToast('Artículo creado','success');
+}
+
+
+/* ══════════ MAPA DE DISPOSITIVOS ══════════ */
+async function renderMapa() {
+  document.getElementById('content').innerHTML = `
+    <div class="table-card">
+      <div class="table-header">
+        <div class="table-header-title">Mapa de dispositivos</div>
+        <button class="btn-primary" onclick="renderMapa()">↻ Actualizar</button>
+      </div>
+      <div id="mapa-wrap" style="padding:16px">
+        <div id="mapa-container" style="width:100%;height:520px;border:1.5px solid var(--border);border-radius:4px;overflow:hidden;position:relative;background:#e8f0e8">
+          <div style="text-align:center;padding:80px 40px;color:var(--text-3)">Cargando...</div>
+        </div>
+        <div id="mapa-lista" style="margin-top:16px"></div>
+      </div>
+    </div>`;
+  try {
+    const dispositivos = await sb('dispositivos?select=id,nombre,device_id,autorizado,lat,lng,ultima_ubicacion,sucursal_id&autorizado=eq.true');
+    const sucMap = {}; sucursales.forEach(s=>sucMap[s.id]=s.nombre);
+    const conUbic = (dispositivos||[]).filter(d=>d.lat && d.lng);
+    const listaHTML = `
+      <div style="font-size:13px;font-weight:700;color:var(--text-2);margin-bottom:8px">Dispositivos (${(dispositivos||[]).length} total, ${conUbic.length} con ubicación GPS)</div>
+      <table class="data-table"><thead><tr><th>Dispositivo</th><th>Sucursal</th><th>Última ubicación</th><th>Coordenadas</th></tr></thead>
+      <tbody>${(dispositivos||[]).map(d=>`<tr>
+        <td style="font-weight:600">${esc(d.nombre||d.device_id||'—')}</td>
+        <td>${sucMap[d.sucursal_id]||'—'}</td>
+        <td>${d.ultima_ubicacion ? new Date(d.ultima_ubicacion).toLocaleString('es-AR') : '<span style="color:var(--text-3)">Sin datos</span>'}</td>
+        <td style="font-size:12px;font-family:monospace">${d.lat && d.lng ? d.lat.toFixed(6)+', '+d.lng.toFixed(6) : '<span style="color:var(--text-3)">—</span>'}</td>
+      </tr>`).join('')}</tbody></table>`;
+    document.getElementById('mapa-lista').innerHTML = listaHTML;
+    if (!conUbic.length) {
+      document.getElementById('mapa-container').innerHTML = '<div style="text-align:center;padding:80px 40px;color:var(--text-3)"><div style="font-size:40px;margin-bottom:12px">📍</div><div>Ningún dispositivo ha enviado su ubicación aún.<br/>La ubicación se envía automáticamente al hacer login en la app.</div></div>';
+      return;
+    }
+    const avgLat = conUbic.reduce((s,d)=>s+d.lat,0)/conUbic.length;
+    const avgLng = conUbic.reduce((s,d)=>s+d.lng,0)/conUbic.length;
+    const mapContainer = document.getElementById('mapa-container');
+    mapContainer.innerHTML = '';
+    if (!window.L) {
+      await new Promise((res,rej)=>{
+        const link = document.createElement('link');
+        link.rel='stylesheet'; link.href='https://unpkg.com/leaflet@1.9.4/dist/leaflet.css';
+        document.head.appendChild(link);
+        const script = document.createElement('script');
+        script.src='https://unpkg.com/leaflet@1.9.4/dist/leaflet.js';
+        script.onload=res; script.onerror=rej;
+        document.head.appendChild(script);
+      });
+    }
+    const map = window.L.map(mapContainer).setView([avgLat, avgLng], 13);
+    window.L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+      attribution:'© OpenStreetMap'
+    }).addTo(map);
+    conUbic.forEach(d => {
+      const fecha = d.ultima_ubicacion ? new Date(d.ultima_ubicacion).toLocaleString('es-AR') : '—';
+      window.L.marker([d.lat, d.lng])
+        .addTo(map)
+        .bindPopup(`<b>${esc(d.nombre||d.device_id||'Dispositivo')}</b><br/>${sucMap[d.sucursal_id]||'—'}<br/><small>${fecha}</small>`);
+    });
+  } catch(e) {
+    document.getElementById('mapa-container').innerHTML = `<div style="text-align:center;padding:40px;color:var(--red)">Error: ${e.message}</div>`;
+  }
+}
+
+/* ══════════ OFERTAS Y PROMOCIONES ══════════ */
+async function renderOfertas() {
+  let ofertasLayout = '2x2', ofertasImgs = [];
+  try {
+    const cfg = await sb('config_app?clave=in.(ofertas_layout,ofertas_imagenes)&select=clave,valor');
+    if (Array.isArray(cfg)) {
+      cfg.forEach(r => {
+        if (r.clave==='ofertas_layout') ofertasLayout = r.valor||'2x2';
+        if (r.clave==='ofertas_imagenes') ofertasImgs = (r.valor||'').split(',').map(s=>s.trim()).filter(Boolean);
+      });
+    }
+  } catch(e) {}
+  const nSlots = {'h1x2':2,'top2x1':3,'bot1x2':3,'2x2':4,'tira':4}[ofertasLayout]||4;
+  const layoutOpts = [
+    {val:'h1x2',label:'Mitad y mitad (2 imágenes)'},
+    {val:'top2x1',label:'2 arriba + 1 abajo (3 imágenes)'},
+    {val:'bot1x2',label:'1 arriba + 2 abajo (3 imágenes)'},
+    {val:'2x2',label:'2×2 cuadrícula (4 imágenes)'},
+    {val:'tira',label:'Tira horizontal'},
+  ].map(o=>`<option value="${o.val}" ${ofertasLayout===o.val?'selected':''}>${o.label}</option>`).join('');
+  let slotsHTML = '';
+  for(let i=0; i<nSlots; i++) {
+    const url = ofertasImgs[i]||'';
+    slotsHTML += `
+      <div style="border:1.5px solid var(--border);padding:12px;background:var(--off-white);border-radius:4px">
+        <div style="font-size:12px;font-weight:700;color:var(--text-3);margin-bottom:8px">Imagen ${i+1}</div>
+        ${url ? `<img src="${url}" style="width:100%;height:120px;object-fit:cover;margin-bottom:8px;border-radius:2px"/>` : '<div style="width:100%;height:120px;background:var(--border);margin-bottom:8px;border-radius:2px;display:flex;align-items:center;justify-content:center;color:var(--text-3);font-size:12px">Sin imagen</div>'}
+        <input type="text" id="oimg-${i}" value="${url}" placeholder="URL de imagen..." style="width:100%;margin-bottom:6px"/>
+        <label style="cursor:pointer;display:inline-flex;align-items:center;gap:6px;height:28px;padding:0 10px;background:var(--blue);color:#fff;font-size:11px;font-weight:600;border-radius:2px">
+          ↑ Subir imagen
+          <input type="file" accept="image/*" style="display:none" onchange="uploadOfertaImg(this,${i})"/>
+        </label>
+      </div>`;
+  }
+  document.getElementById('content').innerHTML = `
+    <div class="table-card">
+      <div class="table-header"><div class="table-header-title">Ofertas y promociones</div></div>
+      <div style="padding:20px;max-width:840px">
+        <div class="form-group">
+          <label>Layout</label>
+          <select id="ofertas-layout" onchange="cambiarLayoutOfertas()" style="max-width:320px">${layoutOpts}</select>
+        </div>
+        <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(180px,1fr));gap:12px;margin:16px 0" id="ofertas-slots">
+          ${slotsHTML}
+        </div>
+        <button class="btn-primary" onclick="guardarOfertas()">💾 Guardar cambios</button>
+      </div>
+    </div>`;
+}
+
+function cambiarLayoutOfertas() {
+  const layout = document.getElementById('ofertas-layout').value;
+  const nSlots = {'h1x2':2,'top2x1':3,'bot1x2':3,'2x2':4,'tira':4}[layout]||4;
+  let slotsHTML = '';
+  for(let i=0; i<nSlots; i++) {
+    slotsHTML += `
+      <div style="border:1.5px solid var(--border);padding:12px;background:var(--off-white);border-radius:4px">
+        <div style="font-size:12px;font-weight:700;color:var(--text-3);margin-bottom:8px">Imagen ${i+1}</div>
+        <div style="width:100%;height:120px;background:var(--border);margin-bottom:8px;border-radius:2px;display:flex;align-items:center;justify-content:center;color:var(--text-3);font-size:12px">Sin imagen</div>
+        <input type="text" id="oimg-${i}" value="" placeholder="URL de imagen..." style="width:100%;margin-bottom:6px"/>
+        <label style="cursor:pointer;display:inline-flex;align-items:center;gap:6px;height:28px;padding:0 10px;background:var(--blue);color:#fff;font-size:11px;font-weight:600;border-radius:2px">
+          ↑ Subir imagen
+          <input type="file" accept="image/*" style="display:none" onchange="uploadOfertaImg(this,${i})"/>
+        </label>
+      </div>`;
+  }
+  document.getElementById('ofertas-slots').innerHTML = slotsHTML;
+}
+
+async function uploadOfertaImg(input, idx) {
+  const file = input?.files?.[0]; if(!file) return;
+  try {
+    const ext = file.name.split('.').pop().toLowerCase();
+    const fname = `oferta_${Date.now()}_${idx}.${ext}`;
+    const r = await fetch(`${SB_URL}/storage/v1/object/imagenes/${fname}`, {
+      method:'POST', headers:{'Authorization':`Bearer ${SB_KEY}`,'Content-Type':file.type,'x-upsert':'true'}, body:file
+    });
+    if(!r.ok) throw new Error(await r.text());
+    const url = `${SB_URL}/storage/v1/object/public/imagenes/${fname}`;
+    const inp = document.getElementById(`oimg-${idx}`);
+    if(inp) { inp.value = url; inp.previousElementSibling.innerHTML=''; const img=document.createElement('img'); img.src=url; img.style.cssText='width:100%;height:120px;object-fit:cover;margin-bottom:8px;border-radius:2px'; inp.parentElement.insertBefore(img, inp.previousElementSibling.nextSibling); }
+    showToast('Imagen subida','success');
+  } catch(e) { showToast('Error al subir imagen: '+e.message,'error'); }
+}
+
+async function guardarOfertas() {
+  const layout = document.getElementById('ofertas-layout').value;
+  const nSlots = {'h1x2':2,'top2x1':3,'bot1x2':3,'2x2':4,'tira':4}[layout]||4;
+  const imgs = [];
+  for(let i=0; i<nSlots; i++) {
+    const v = document.getElementById(`oimg-${i}`)?.value.trim();
+    if(v) imgs.push(v);
+  }
+  await saveConfig('ofertas_layout', layout);
+  await saveConfig('ofertas_imagenes', imgs.join(','));
+  showToast('Ofertas guardadas','success');
 }
 
 function filterArticulos() {
@@ -2024,12 +2195,22 @@ async function renderVendedores() {
   await loadBaseData();
   const sucMap = {};
   sucursales.forEach(s => sucMap[s.id] = s.nombre);
+  // Cargar sucursales múltiples de tabla intermedia
+  try {
+    const vsRows = await sb('vendedor_sucursales?select=vendedor_id,sucursal_id');
+    if (Array.isArray(vsRows)) {
+      vendedores.forEach(v => {
+        const ids = vsRows.filter(r=>r.vendedor_id===v.id).map(r=>sucMap[r.sucursal_id]).filter(Boolean);
+        v._sucursales = ids.length ? ids.join(', ') : (sucMap[v.sucursal_id]||'—');
+      });
+    }
+  } catch(e) {}
 
   const rows = vendedores.map(v=>`
     <tr>
       <td style="font-weight:600">${v.nombre}</td>
       <td>${v.telefono||'—'}</td>
-      <td>${sucMap[v.sucursal_id]||'—'}</td>
+      <td>${v._sucursales||sucMap[v.sucursal_id]||'—'}</td>
       <td>${v.callmebot_apikey ? '<span style="color:var(--green-dark)">✓ Configurado</span>' : '<span style="color:var(--red)">Sin configurar</span>'}</td>
       <td class="td-actions">
         <button class="btn-sm btn-edit" onclick="editVendedor(${v.id})">Editar</button>
@@ -2084,14 +2265,27 @@ async function crearVendedor() {
   showToast('Vendedor creado','success');
 }
 
-function editVendedor(id) {
+async function editVendedor(id) {
   const v = vendedores.find(x=>x.id===id);
   if (!v) return;
-  const sucOpts = sucursales.map(s=>`<option value="${s.id}" ${v.sucursal_id===s.id?'selected':''}>${s.nombre}</option>`).join('');
+  let sucAsociadas = [];
+  try {
+    const rows = await sb(`vendedor_sucursales?vendedor_id=eq.${id}&select=sucursal_id`);
+    if (Array.isArray(rows)) sucAsociadas = rows.map(r=>r.sucursal_id);
+  } catch(e) {}
+  const sucChecks = sucursales.map(s=>`
+    <label style="display:flex;align-items:center;gap:8px;padding:6px 0;cursor:pointer;font-size:13px">
+      <input type="checkbox" value="${s.id}" ${sucAsociadas.includes(s.id)?'checked':''} style="width:16px;height:16px;cursor:pointer"/>
+      ${esc(s.nombre)}
+    </label>`).join('');
   openModal('Editar vendedor', `
     <div class="form-group"><label>Nombre</label><input id="v-nombre" value="${esc(v.nombre||'')}"/></div>
     <div class="form-group"><label>Teléfono (con código país, sin +)</label><input id="v-tel" value="${esc(v.telefono||'')}"/></div>
-    <div class="form-group"><label>Sucursal</label><select id="v-suc"><option value="">Sin sucursal</option>${sucOpts}</select></div>
+    <div class="form-group"><label>Sucursales asignadas</label>
+      <div style="border:1.5px solid var(--border);padding:8px 12px;max-height:160px;overflow-y:auto;background:var(--off-white)" id="v-suc-checks">
+        ${sucChecks}
+      </div>
+    </div>
     <div class="form-group"><label>API Key CallMeBot</label><input id="v-apikey" value="${esc(v.callmebot_apikey||'')}"/></div>
   `, [
     { label:'Cancelar', cls:'btn-sm', action: closeModal },
@@ -2102,8 +2296,19 @@ function editVendedor(id) {
 async function guardarVendedor(id) {
   await sb(`vendedores?id=eq.${id}`, {
     method:'PATCH', prefer:'return=minimal',
-    body:{ nombre:document.getElementById('v-nombre').value.trim(), telefono:document.getElementById('v-tel').value.trim(), sucursal_id:document.getElementById('v-suc').value||null, callmebot_apikey:document.getElementById('v-apikey').value.trim()||null }
+    body:{ nombre:document.getElementById('v-nombre').value.trim(), telefono:document.getElementById('v-tel').value.trim(), callmebot_apikey:document.getElementById('v-apikey').value.trim()||null }
   });
+  // Actualizar sucursales en tabla intermedia
+  const checks = document.querySelectorAll('#v-suc-checks input[type=checkbox]');
+  const selIds = Array.from(checks).filter(c=>c.checked).map(c=>parseInt(c.value));
+  // Borrar asociaciones anteriores
+  await sb(`vendedor_sucursales?vendedor_id=eq.${id}`, {method:'DELETE', prefer:'return=minimal'});
+  // Insertar nuevas
+  if (selIds.length) {
+    await sb('vendedor_sucursales', {method:'POST', prefer:'return=minimal',
+      body: selIds.map(sid=>({vendedor_id:id, sucursal_id:sid}))
+    });
+  }
   closeModal(); await loadBaseData(); renderVendedores();
   showToast('Vendedor actualizado','success');
 }
