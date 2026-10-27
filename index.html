@@ -391,7 +391,7 @@ tr:hover td{background:var(--off-white)}
 // CONFIG
 // ══════════════════════════════════════════════
 const SB_URL = "https://ncagcvtkporoapumenoo.supabase.co";
-const SB_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im5jYWdjdnRrcG9yb2FwdW1lbm9vIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODQwODI4NDQsImV4cCI6MjA5OTY1ODg0NH0.7LyvoGFFI4KWRDq5JgNFOpkGjtlplTDRX_kCHjoXXNc";
+const SB_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im5jYWdjdnRrcG9yb2FwdW1lbm9vIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc4NDA4Mjg0NCwiZXhwIjoyMDk5NjU4ODQ0fQ.raziKoLpfqAgEvFvyQ9KaP2weKkGL_ksyWwEYQmX2Vc";
 
 // ══════════════════════════════════════════════
 // STATE
@@ -793,60 +793,78 @@ async function renderOfertas() {
     }
   } catch(e) {}
   const nSlots = {'h1x2':2,'top2x1':3,'bot1x2':3,'2x2':4,'tira':4}[ofertasLayout]||4;
-  const layoutOpts = [
-    {val:'h1x2',label:'Mitad y mitad (2 imágenes)'},
-    {val:'top2x1',label:'2 arriba + 1 abajo (3 imágenes)'},
-    {val:'bot1x2',label:'1 arriba + 2 abajo (3 imágenes)'},
-    {val:'2x2',label:'2×2 cuadrícula (4 imágenes)'},
-    {val:'tira',label:'Tira horizontal'},
-  ].map(o=>`<option value="${o.val}" ${ofertasLayout===o.val?'selected':''}>${o.label}</option>`).join('');
-  let slotsHTML = '';
+  const layoutOpts = ['h1x2','top2x1','bot1x2','2x2','tira'].map(v => {
+    const labels = {'h1x2':'Mitad y mitad (2 imágenes)','top2x1':'2 arriba + 1 abajo (3 imágenes)','bot1x2':'1 arriba + 2 abajo (3 imágenes)','2x2':'2x2 cuadrícula (4 imágenes)','tira':'Tira horizontal'};
+    const sel = ofertasLayout===v ? ' selected' : '';
+    return '<option value="'+v+'"'+sel+'>'+labels[v]+'</option>';
+  }).join('');
+
+  // Armar slots sin interpolar URLs en atributos HTML
+  const slotsArr = [];
   for(let i=0; i<nSlots; i++) {
-    const url = ofertasImgs[i]||'';
-    slotsHTML += `
-      <div style="border:1.5px solid var(--border);padding:12px;background:var(--off-white);border-radius:4px">
-        <div style="font-size:12px;font-weight:700;color:var(--text-3);margin-bottom:8px">Imagen ${i+1}</div>
-        ${url ? `<img src="${url}" style="width:100%;height:120px;object-fit:cover;margin-bottom:8px;border-radius:2px"/>` : '<div style="width:100%;height:120px;background:var(--border);margin-bottom:8px;border-radius:2px;display:flex;align-items:center;justify-content:center;color:var(--text-3);font-size:12px">Sin imagen</div>'}
-        <input type="text" id="oimg-${i}" value="${url}" placeholder="URL de imagen..." style="width:100%;margin-bottom:6px"/>
-        <label style="cursor:pointer;display:inline-flex;align-items:center;gap:6px;height:28px;padding:0 10px;background:var(--blue);color:#fff;font-size:11px;font-weight:600;border-radius:2px">
-          ↑ Subir imagen
-          <input type="file" accept="image/*" style="display:none" onchange="uploadOfertaImg(this,${i})"/>
-        </label>
-      </div>`;
+    slotsArr.push('<div style="border:1.5px solid var(--border);padding:12px;background:var(--off-white);border-radius:4px">'
+      + '<div style="font-size:12px;font-weight:700;color:var(--text-3);margin-bottom:8px">Imagen '+(i+1)+'</div>'
+      + '<div id="oimg-preview-'+i+'" style="width:100%;height:120px;background:var(--border);margin-bottom:8px;border-radius:2px;display:flex;align-items:center;justify-content:center;color:var(--text-3);font-size:12px">Sin imagen</div>'
+      + '<input type="text" id="oimg-'+i+'" placeholder="URL de imagen..." style="width:100%;margin-bottom:6px" oninput="previewOfertaImg(this,'+i+')" />'
+      + '<label style="cursor:pointer;display:inline-flex;align-items:center;gap:6px;height:28px;padding:0 10px;background:var(--blue);color:#fff;font-size:11px;font-weight:600;border-radius:2px">'
+      + '↑ Subir imagen'
+      + '<input type="file" accept="image/*" style="display:none" onchange="uploadOfertaImg(this,'+i+')"/>'
+      + '</label>'
+      + '</div>');
   }
-  document.getElementById('content').innerHTML = `
-    <div class="table-card">
-      <div class="table-header"><div class="table-header-title">Ofertas y promociones</div></div>
-      <div style="padding:20px;max-width:840px">
-        <div class="form-group">
-          <label>Layout</label>
-          <select id="ofertas-layout" onchange="cambiarLayoutOfertas()" style="max-width:320px">${layoutOpts}</select>
-        </div>
-        <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(180px,1fr));gap:12px;margin:16px 0" id="ofertas-slots">
-          ${slotsHTML}
-        </div>
-        <button class="btn-primary" onclick="guardarOfertas()">💾 Guardar cambios</button>
-      </div>
-    </div>`;
+
+  document.getElementById('content').innerHTML =
+    '<div class="table-card">'
+    + '<div class="table-header"><div class="table-header-title">Ofertas y promociones</div></div>'
+    + '<div style="padding:20px;max-width:840px">'
+    + '<div class="form-group"><label>Layout</label>'
+    + '<select id="ofertas-layout" onchange="cambiarLayoutOfertas()" style="max-width:320px">'+layoutOpts+'</select></div>'
+    + '<div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(180px,1fr));gap:12px;margin:16px 0" id="ofertas-slots">'
+    + slotsArr.join('')
+    + '</div>'
+    + '<button class="btn-primary" onclick="guardarOfertas()">&#128190; Guardar cambios</button>'
+    + '</div></div>';
+
+  // Setear valores de URLs de forma segura con setAttribute
+  ofertasImgs.forEach((url, i) => {
+    const inp = document.getElementById('oimg-'+i);
+    if (inp) {
+      inp.setAttribute('value', url);
+      inp.value = url;
+      const preview = document.getElementById('oimg-preview-'+i);
+      if (preview && url) {
+        preview.innerHTML = '<img src="'+url+'" style="width:100%;height:120px;object-fit:cover;border-radius:2px"/>';
+      }
+    }
+  });
+}
+
+function previewOfertaImg(input, idx) {
+  const url = input.value.trim();
+  const preview = document.getElementById('oimg-preview-'+idx);
+  if (!preview) return;
+  if (url) {
+    preview.innerHTML = '<img src="'+url+'" style="width:100%;height:120px;object-fit:cover;border-radius:2px" onerror="this.parentElement.innerHTML='<div style=\'display:flex;align-items:center;justify-content:center;height:100%;color:var(--text-3);font-size:12px\'> URL inválida</div>'"/>';
+  } else {
+    preview.innerHTML = '<div style="display:flex;align-items:center;justify-content:center;height:100%;color:var(--text-3);font-size:12px">Sin imagen</div>';
+  }
 }
 
 function cambiarLayoutOfertas() {
   const layout = document.getElementById('ofertas-layout').value;
   const nSlots = {'h1x2':2,'top2x1':3,'bot1x2':3,'2x2':4,'tira':4}[layout]||4;
-  let slotsHTML = '';
+  const slots = [];
   for(let i=0; i<nSlots; i++) {
-    slotsHTML += `
-      <div style="border:1.5px solid var(--border);padding:12px;background:var(--off-white);border-radius:4px">
-        <div style="font-size:12px;font-weight:700;color:var(--text-3);margin-bottom:8px">Imagen ${i+1}</div>
-        <div style="width:100%;height:120px;background:var(--border);margin-bottom:8px;border-radius:2px;display:flex;align-items:center;justify-content:center;color:var(--text-3);font-size:12px">Sin imagen</div>
-        <input type="text" id="oimg-${i}" value="" placeholder="URL de imagen..." style="width:100%;margin-bottom:6px"/>
-        <label style="cursor:pointer;display:inline-flex;align-items:center;gap:6px;height:28px;padding:0 10px;background:var(--blue);color:#fff;font-size:11px;font-weight:600;border-radius:2px">
-          ↑ Subir imagen
-          <input type="file" accept="image/*" style="display:none" onchange="uploadOfertaImg(this,${i})"/>
-        </label>
-      </div>`;
+    slots.push('<div style="border:1.5px solid var(--border);padding:12px;background:var(--off-white);border-radius:4px">'
+      + '<div style="font-size:12px;font-weight:700;color:var(--text-3);margin-bottom:8px">Imagen '+(i+1)+'</div>'
+      + '<div id="oimg-preview-'+i+'" style="width:100%;height:120px;background:var(--border);margin-bottom:8px;border-radius:2px;display:flex;align-items:center;justify-content:center;color:var(--text-3);font-size:12px">Sin imagen</div>'
+      + '<input type="text" id="oimg-'+i+'" placeholder="URL de imagen..." style="width:100%;margin-bottom:6px" oninput="previewOfertaImg(this,'+i+')" />'
+      + '<label style="cursor:pointer;display:inline-flex;align-items:center;gap:6px;height:28px;padding:0 10px;background:var(--blue);color:#fff;font-size:11px;font-weight:600;border-radius:2px">'
+      + '↑ Subir imagen'
+      + '<input type="file" accept="image/*" style="display:none" onchange="uploadOfertaImg(this,'+i+')"/>'
+      + '</label></div>');
   }
-  document.getElementById('ofertas-slots').innerHTML = slotsHTML;
+  document.getElementById('ofertas-slots').innerHTML = slots.join('');
 }
 
 async function uploadOfertaImg(input, idx) {
