@@ -844,7 +844,14 @@ function previewOfertaImg(input, idx) {
   const preview = document.getElementById('oimg-preview-'+idx);
   if (!preview) return;
   if (url) {
-    preview.innerHTML = '<img src="'+url+'" style="width:100%;height:120px;object-fit:cover;border-radius:2px" onerror="this.parentElement.innerHTML='<div style=\'display:flex;align-items:center;justify-content:center;height:100%;color:var(--text-3);font-size:12px\'> URL inválida</div>'"/>';
+    const img = document.createElement('img');
+    img.src = url;
+    img.style.cssText = 'width:100%;height:120px;object-fit:cover;border-radius:2px';
+    img.onerror = function() {
+      preview.innerHTML = '<div style="display:flex;align-items:center;justify-content:center;height:100%;color:var(--text-3);font-size:12px">URL inv&#225;lida</div>';
+    };
+    preview.innerHTML = '';
+    preview.appendChild(img);
   } else {
     preview.innerHTML = '<div style="display:flex;align-items:center;justify-content:center;height:100%;color:var(--text-3);font-size:12px">Sin imagen</div>';
   }
