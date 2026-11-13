@@ -400,6 +400,7 @@ let currentUser = null;
 let articulosData = [], categorias = [], sucursales = [], vendedores = [];
 let artPage = 1, artPageSize = 20;
 let artFilter = { search:'', categoria:'', activo:'' };
+let destacadosCodigos = []; // lista de códigos desde config_app > web_destacados
 let chartInstance = null;
 
 // ══════════════════════════════════════════════
@@ -641,6 +642,15 @@ async function loadArticulos() {
   let query = 'articulos?select=*&order=nombre_original.asc&limit=5000';
   const res = await sb(query);
   articulosData = res || [];
+  // Cargar lista de destacados desde config_app
+  try {
+    const cfg = await sb('config_app?clave=eq.web_destacados&select=valor');
+    if (Array.isArray(cfg) && cfg.length) {
+      destacadosCodigos = (cfg[0].valor||'').split(',').map(s=>s.trim()).filter(Boolean);
+    } else {
+      destacadosCodigos = [];
+    }
+  } catch(e) { destacadosCodigos = []; }
   filterArticulos();
 }
 
@@ -958,7 +968,11 @@ function renderArticulosTable() {
   const catMap = {};
   categorias.forEach(c => catMap[c.clave] = c.label);
 
-  const rows = page.map(a => `
+  const norm = c => String(c).replace(/^0+/,'') || '0';
+  const destSet = new Set(destacadosCodigos.map(norm));
+  const rows = page.map(a => {
+    const esDest = destSet.has(norm(a.codigo));
+    return `
     <tr>
       <td style="font-size:11px;color:var(--text-3)">${formatCodigo(a.codigo)}</td>
       <td>
@@ -970,11 +984,11 @@ function renderArticulosTable() {
       <td>${a.stock??'—'}</td>
       <td><span class="badge ${a.activo?'badge-active':'badge-inactive'}">${a.activo?'Activo':'Inactivo'}</span></td>
       <td style="text-align:center">
-        <button title="${a.destacado?'Quitar de destacados':'Marcar como destacado'}"
-          onclick="toggleDestacado('${a.codigo}',${!!a.destacado})"
+        <button title="${esDest?'Quitar de destacados':'Marcar como destacado'}"
+          onclick="toggleDestacado('${a.codigo}')"
           style="background:none;border:none;cursor:pointer;font-size:20px;line-height:1;padding:2px 6px;transition:transform .15s"
           onmouseover="this.style.transform='scale(1.3)'" onmouseout="this.style.transform='scale(1)'">
-          ${a.destacado ? '⭐' : '☆'}
+          ${esDest ? '⭐' : '☆'}
         </button>
       </td>
       <td class="td-actions">
@@ -984,7 +998,8 @@ function renderArticulosTable() {
         </button>
       </td>
     </tr>
-  `).join('');
+  `;
+  }).join('');
 
   document.getElementById('art-table-wrap').innerHTML = `
     <table>
@@ -1085,7 +1100,7 @@ function editArticulo(codigo) {
       </select>
     </div>
     <div class="form-group" style="display:flex;align-items:center;gap:10px;margin-top:4px">
-      <input type="checkbox" id="e-destacado" ${a.destacado?'checked':''} style="width:18px;height:18px;cursor:pointer;accent-color:var(--accent)"/>
+      <input type="checkbox" id="e-destacado" ${(()=>{const n=c=>String(c).replace(/^0+/,'')||'0';return destacadosCodigos.some(d=>n(d)===n(a.codigo));})() ?'checked':''} style="width:18px;height:18px;cursor:pointer;accent-color:var(--accent)"/>
       <label for="e-destacado" style="cursor:pointer;font-weight:600;margin:0">
         ⭐ Producto destacado <span style="font-size:12px;font-weight:400;color:var(--text-3)">(aparece en la sección de inicio)</span>
       </label>
@@ -1103,8 +1118,19 @@ async function saveArticulo(codigo) {
     descripcion:    document.getElementById('e-desc').value.trim() || null,
     imagen_url:     document.getElementById('e-img').value.trim() || null,
     activo:         document.getElementById('e-activo').value === 'true',
-    destacado:      document.getElementById('e-destacado').checked,
   };
+  // Manejar destacado por separado vía config_app
+  const norm = c => String(c).replace(/^0+/,'') || '0';
+  const quiereDestacado = document.getElementById('e-destacado').checked;
+  const yaDestacado = destacadosCodigos.some(d => norm(d) === norm(codigo));
+  if (quiereDestacado && !yaDestacado) {
+    destacadosCodigos.push(String(codigo));
+    await saveConfig('web_destacados', destacadosCodigos.join(','));
+  } else if (!quiereDestacado && yaDestacado) {
+    destacadosCodigos = destacadosCodigos.filter(d => norm(d) !== norm(codigo));
+    await saveConfig('web_destacados', destacadosCodigos.join(','));
+  }
+  const _dummy = null; // separador
   try {
     await sb(`articulos?codigo=eq.${codigo}`, {method:'PATCH', body:payload, prefer:'return=minimal'});
     const idx = articulosData.findIndex(a=>a.codigo===codigo);
@@ -1126,14 +1152,19 @@ async function toggleArticulo(codigo, current) {
   showToast(!current ? 'Artículo activado' : 'Artículo desactivado', 'success');
 }
 
-async function toggleDestacado(codigo, current) {
-  const nuevoValor = !current;
+async function toggleDestacado(codigo) {
+  const norm = c => String(c).replace(/^0+/,'') || '0';
+  const cod = norm(codigo);
+  const idx = destacadosCodigos.findIndex(c => norm(c) === cod);
+  if (idx >= 0) {
+    destacadosCodigos.splice(idx, 1); // quitar
+  } else {
+    destacadosCodigos.push(String(codigo)); // agregar
+  }
   try {
-    await sb(`articulos?codigo=eq.${codigo}`, {method:'PATCH', body:{destacado: nuevoValor}, prefer:'return=minimal'});
-    const idx = articulosData.findIndex(a=>a.codigo===codigo);
-    if (idx>=0) articulosData[idx].destacado = nuevoValor;
+    await saveConfig('web_destacados', destacadosCodigos.join(','));
     renderArticulosTable();
-    showToast(nuevoValor ? '⭐ Marcado como destacado' : 'Quitado de destacados', 'success');
+    showToast(idx < 0 ? '⭐ Marcado como destacado' : 'Quitado de destacados', 'success');
   } catch(e) {
     console.error('toggleDestacado error:', e);
     showToast('Error: ' + (e.message||e), 'error');
