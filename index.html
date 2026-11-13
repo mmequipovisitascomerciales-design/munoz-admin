@@ -1105,12 +1105,17 @@ async function saveArticulo(codigo) {
     activo:         document.getElementById('e-activo').value === 'true',
     destacado:      document.getElementById('e-destacado').checked,
   };
-  await sb(`articulos?codigo=eq.${codigo}`, {method:'PATCH', body:payload, prefer:'return=minimal'});
-  const idx = articulosData.findIndex(a=>a.codigo===codigo);
-  if (idx>=0) Object.assign(articulosData[idx], payload);
-  closeModal();
-  renderArticulosTable();
-  showToast('Artículo actualizado', 'success');
+  try {
+    await sb(`articulos?codigo=eq.${codigo}`, {method:'PATCH', body:payload, prefer:'return=minimal'});
+    const idx = articulosData.findIndex(a=>a.codigo===codigo);
+    if (idx>=0) Object.assign(articulosData[idx], payload);
+    closeModal();
+    renderArticulosTable();
+    showToast('Artículo actualizado', 'success');
+  } catch(e) {
+    console.error('saveArticulo error:', e);
+    showToast('Error al guardar: ' + (e.message||e), 'error');
+  }
 }
 
 async function toggleArticulo(codigo, current) {
@@ -1123,11 +1128,16 @@ async function toggleArticulo(codigo, current) {
 
 async function toggleDestacado(codigo, current) {
   const nuevoValor = !current;
-  await sb(`articulos?codigo=eq.${codigo}`, {method:'PATCH', body:{destacado: nuevoValor}, prefer:'return=minimal'});
-  const idx = articulosData.findIndex(a=>a.codigo===codigo);
-  if (idx>=0) articulosData[idx].destacado = nuevoValor;
-  renderArticulosTable();
-  showToast(nuevoValor ? '⭐ Marcado como destacado' : 'Quitado de destacados', 'success');
+  try {
+    await sb(`articulos?codigo=eq.${codigo}`, {method:'PATCH', body:{destacado: nuevoValor}, prefer:'return=minimal'});
+    const idx = articulosData.findIndex(a=>a.codigo===codigo);
+    if (idx>=0) articulosData[idx].destacado = nuevoValor;
+    renderArticulosTable();
+    showToast(nuevoValor ? '⭐ Marcado como destacado' : 'Quitado de destacados', 'success');
+  } catch(e) {
+    console.error('toggleDestacado error:', e);
+    showToast('Error: ' + (e.message||e), 'error');
+  }
 }
 
 
