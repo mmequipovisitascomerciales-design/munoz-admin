@@ -639,9 +639,18 @@ async function renderArticulos() {
 }
 
 async function loadArticulos() {
-  let query = 'articulos?select=*&order=nombre_original.asc&limit=5000';
-  const res = await sb(query);
-  articulosData = res || [];
+  // Cargar en lotes de 1000 para superar el límite de PostgREST
+  let allArticulos = [];
+  let offset = 0;
+  const batchSize = 1000;
+  while (true) {
+    const batch = await sb(`articulos?select=*&order=codigo.asc&limit=${batchSize}&offset=${offset}`);
+    if (!batch || batch.length === 0) break;
+    allArticulos = allArticulos.concat(batch);
+    if (batch.length < batchSize) break; // último lote
+    offset += batchSize;
+  }
+  articulosData = allArticulos;
   // Cargar lista de destacados desde config_app
   try {
     const cfg = await sb('config_app?clave=eq.web_destacados&select=valor');
@@ -954,7 +963,8 @@ function renderArticulosTable() {
   let filtered = articulosData.filter(a => {
     const q = artFilter.search;
     const matchSearch = !q || (a.nombre_original||'').toLowerCase().includes(q) ||
-      (a.nombre_custom||'').toLowerCase().includes(q) || String(a.codigo).includes(q);
+      (a.nombre_custom||'').toLowerCase().includes(q) || (a.nombre||'').toLowerCase().includes(q) ||
+      String(a.codigo).includes(q);
     const matchCat = !artFilter.categoria || a.categoria_clave === artFilter.categoria;
     const matchActivo = artFilter.activo === '' || String(a.activo) === artFilter.activo;
     return matchSearch && matchCat && matchActivo;
