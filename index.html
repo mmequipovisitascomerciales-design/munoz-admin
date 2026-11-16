@@ -302,54 +302,55 @@ tr:hover td{background:var(--off-white)}
     <div class="sidebar-user">Sesión: <span id="sidebar-username">admin</span></div>
     <nav class="sidebar-nav">
       <div class="nav-section-label">Principal</div>
-      <div class="nav-item active" onclick="showSection('dashboard')" id="nav-dashboard">
+      <div class="nav-item active" onclick="showSection('dashboard')" id="nav-dashboard" data-section="dashboard">
         <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/></svg>
         Dashboard
       </div>
       <div class="nav-section-label">Catálogo</div>
-      <div class="nav-item" onclick="showSection('articulos')" id="nav-articulos">
+      <div class="nav-item" onclick="showSection('articulos')" id="nav-articulos" data-section="articulos">
         <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 10V7"/></svg>
         Artículos
       </div>
-      <div class="nav-item" onclick="showSection('video')" id="nav-video">
-        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 10l4.553-2.069A1 1 0 0121 8.82v6.36a1 1 0 01-1.447.894L15 14M3 8a2 2 0 012-2h8a2 2 0 012 2v8a2 2 0 01-2 2H5a2 2 0 01-2-2V8z"/></svg>
-        Video portada
-      </div>
-      <div class="nav-item" onclick="showSection('importar')" id="nav-importar">
+      <div class="nav-item" onclick="showSection('importar')" id="nav-importar" data-section="importar">
         <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M9 19l3 3m0 0l3-3m-3 3V10"/></svg>
         Importar Excel
       </div>
-      <div class="nav-item" onclick="showSection('apk')" id="nav-apk">
-        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 18h.01M8 21h8a2 2 0 002-2V5a2 2 0 00-2-2H8a2 2 0 00-2 2v14a2 2 0 002 2z"/></svg>
-        App APK
-      </div>
-      <div class="nav-item" onclick="showSection('portada-web')" id="nav-portada-web">
+      <div class="nav-section-label">Web</div>
+      <div class="nav-item" onclick="showSection('portada-web')" id="nav-portada-web" data-section="portada-web">
         <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 12a9 9 0 01-9 9m9-9a9 9 0 00-9-9m9 9H3m9 9a9 9 0 01-9-9m9 9c1.657 0 3-4.03 3-9s-1.343-9-3-9m0 18c-1.657 0-3-4.03-3-9s1.343-9 3-9"/></svg>
         Portada web
       </div>
-      <div class="nav-section-label">Ventas</div>
-      <div class="nav-item" onclick="showSection('presupuestos')" id="nav-presupuestos">
-        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
-        Presupuestos
-      </div>
-      <div class="nav-item admin-only" onclick="showSection('mapa')" id="nav-mapa">
-        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"/></svg>
-        Mapa dispositivos
-      </div>
-      <div class="nav-item admin-only" onclick="showSection('ofertas')" id="nav-ofertas">
+      <div class="nav-item" onclick="showSection('ofertas')" id="nav-ofertas" data-section="ofertas">
         <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z"/></svg>
         Ofertas y promos
       </div>
-      <div class="nav-section-label admin-only">Administración</div>
-      <div class="nav-item admin-only" onclick="showSection('sucursales')" id="nav-sucursales">
-        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-2 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"/></svg>
-        Sucursales
+      <div class="nav-section-label">App</div>
+      <div class="nav-item" onclick="showSection('video')" id="nav-video" data-section="video">
+        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 10l4.553-2.069A1 1 0 0121 8.82v6.36a1 1 0 01-1.447.894L15 14M3 8a2 2 0 012-2h8a2 2 0 012 2v8a2 2 0 01-2 2H5a2 2 0 01-2-2V8z"/></svg>
+        Portada app
       </div>
-      <div class="nav-item admin-only" onclick="showSection('vendedores')" id="nav-vendedores">
+      <div class="nav-section-label admin-only">Administración</div>
+      <div class="nav-item admin-only" onclick="showSection('presupuestos')" id="nav-presupuestos" data-section="presupuestos">
+        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
+        Presupuestos
+      </div>
+      <div class="nav-item admin-only" onclick="showSection('apk')" id="nav-apk" data-section="apk">
+        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 18h.01M8 21h8a2 2 0 002-2V5a2 2 0 00-2-2H8a2 2 0 00-2 2v14a2 2 0 002 2z"/></svg>
+        App APK
+      </div>
+      <div class="nav-item admin-only" onclick="showSection('mapa')" id="nav-mapa" data-section="mapa">
+        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"/></svg>
+        Mapa dispositivos
+      </div>
+      <div class="nav-item admin-only" onclick="showSection('vendedores')" id="nav-vendedores" data-section="vendedores">
         <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0z"/></svg>
         Vendedores
       </div>
-      <div class="nav-item admin-only" onclick="showSection('usuarios')" id="nav-usuarios">
+      <div class="nav-item admin-only" onclick="showSection('sucursales')" id="nav-sucursales" data-section="sucursales">
+        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-2 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"/></svg>
+        Sucursales
+      </div>
+      <div class="nav-item admin-only" onclick="showSection('usuarios')" id="nav-usuarios" data-section="usuarios">
         <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 7a2 2 0 012 2m4 0a6 6 0 01-7.743 5.743L11 17H9v2H7v2H4a1 1 0 01-1-1v-2.586a1 1 0 01.293-.707l5.964-5.964A6 6 0 1121 9z"/></svg>
         Usuarios gestión
       </div>
@@ -441,9 +442,33 @@ async function doLogin() {
     document.getElementById('login-screen').style.display = 'none';
     document.getElementById('app').classList.add('visible');
     document.getElementById('sidebar-username').textContent = currentUser.username + (currentUser.rol === 'admin' ? ' (admin)' : '');
-    // Hide admin sections if not admin
+    // Parse permisos JSON if stored as string
+    if (currentUser.permisos && typeof currentUser.permisos === 'string') {
+      try { currentUser.permisos = JSON.parse(currentUser.permisos); } catch(e) { currentUser.permisos = []; }
+    }
+    // For admin: show all sections; for others: show only allowed sections
     if (currentUser.rol !== 'admin') {
       document.querySelectorAll('.admin-only').forEach(el => el.style.display = 'none');
+      // Also hide nav items not in permisos
+      const permisos = currentUser.permisos || [];
+      if (permisos.length > 0) {
+        document.querySelectorAll('.nav-item[data-section]').forEach(el => {
+          const sec = el.getAttribute('data-section');
+          if (sec !== 'dashboard' && !permisos.includes(sec)) {
+            el.style.display = 'none';
+          }
+        });
+        // Hide nav-section-labels that have no visible nav-items
+        document.querySelectorAll('.nav-section-label').forEach(label => {
+          let next = label.nextElementSibling;
+          let hasVisible = false;
+          while (next && !next.classList.contains('nav-section-label')) {
+            if (next.style.display !== 'none') { hasVisible = true; break; }
+            next = next.nextElementSibling;
+          }
+          if (!hasVisible) label.style.display = 'none';
+        });
+      }
     }
     await loadBaseData();
     showSection('dashboard');
@@ -479,19 +504,38 @@ async function loadBaseData() {
 // NAVIGATION
 // ══════════════════════════════════════════════
 function showSection(section) {
+  // Check permissions for non-admin users
+  if (currentUser && currentUser.rol !== 'admin') {
+    const permisos = currentUser.permisos || [];
+    // dashboard always allowed; for others, check list
+    if (section !== 'dashboard' && permisos.length > 0 && !permisos.includes(section)) {
+      showToast('No tenés acceso a esta sección', 'error');
+      return;
+    }
+  }
   document.querySelectorAll('.nav-item').forEach(el => el.classList.remove('active'));
   const navEl = document.getElementById('nav-'+section);
   if (navEl) navEl.classList.add('active');
   const titles = {
-    dashboard:'Dashboard', articulos:'Artículos', video:'Video de portada', presupuestos:'Presupuestos',
-    mapa:'Mapa de dispositivos', ofertas:'Ofertas y promociones',
-    sucursales:'Sucursales', vendedores:'Vendedores', usuarios:'Usuarios de Gestión'
+    dashboard:'Dashboard',
+    articulos:'Artículos',
+    importar:'Importar Excel',
+    'portada-web':'Portada web',
+    ofertas:'Ofertas y promociones',
+    video:'Portada app',
+    presupuestos:'Presupuestos',
+    apk:'App APK',
+    mapa:'Mapa de dispositivos',
+    vendedores:'Vendedores',
+    sucursales:'Sucursales',
+    usuarios:'Usuarios de Gestión'
   };
   document.getElementById('topbar-title').textContent = titles[section] || section;
   const content = document.getElementById('content');
   content.innerHTML = '<div style="text-align:center;padding:60px;color:var(--text-3)">Cargando...</div>';
   const fns = {
-    dashboard: renderDashboard, articulos: renderArticulos, importar: renderImportar, video: renderVideo, 'portada-web': renderPortadaWeb, apk: renderApk,
+    dashboard: renderDashboard, articulos: renderArticulos, importar: renderImportar, video: renderVideo,
+    'portada-web': renderPortadaWeb, apk: renderApk,
     presupuestos: renderPresupuestos, mapa: renderMapa, ofertas: renderOfertas, sucursales: renderSucursales,
     vendedores: renderVendedores, usuarios: renderUsuarios,
   };
@@ -720,6 +764,12 @@ async function crearArticulo() {
   const codigo = document.getElementById('n-cod').value.trim();
   const nombre = document.getElementById('n-nom').value.trim();
   if(!codigo || !nombre) { showToast('Código y nombre son obligatorios','error'); return; }
+  // Verificar que no exista ya un artículo con ese código
+  const exists = await sb(`articulos?codigo=eq.${codigo}&select=codigo`);
+  if (exists?.length) {
+    showToast(`Ya existe un artículo con el código ${codigo}`, 'error');
+    return;
+  }
   const precioBase = parseFloat(document.getElementById('n-precio').value) || 0;
   const precio = roundMarkup(precioBase);
   const stock = parseInt(document.getElementById('n-stock').value) || 0;
@@ -2493,10 +2543,46 @@ function nuevoUsuario() {
     <div class="form-group"><label>Contraseña</label><input id="u-pass" type="password" placeholder="contraseña"/></div>
     <div class="form-group">
       <label>Rol</label>
-      <select id="u-rol">
-        <option value="gestion">Gestión (solo artículos y presupuestos)</option>
+      <select id="u-rol" onchange="togglePermisosPanel(this.value)">
+        <option value="gestion">Gestión (acceso limitado)</option>
         <option value="admin">Admin (acceso completo)</option>
       </select>
+    </div>
+    <div id="permisos-panel" style="margin-top:12px;">
+      <label style="font-weight:600;display:block;margin-bottom:8px;color:var(--text-2)">Secciones habilitadas</label>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:6px 16px;">
+        <label style="display:flex;align-items:center;gap:8px;cursor:pointer;font-size:13px;">
+          <input type="checkbox" name="perm" value="articulos" checked style="accent-color:var(--blue)"> Artículos
+        </label>
+        <label style="display:flex;align-items:center;gap:8px;cursor:pointer;font-size:13px;">
+          <input type="checkbox" name="perm" value="importar" style="accent-color:var(--blue)"> Importar Excel
+        </label>
+        <label style="display:flex;align-items:center;gap:8px;cursor:pointer;font-size:13px;">
+          <input type="checkbox" name="perm" value="portada-web" style="accent-color:var(--blue)"> Portada web
+        </label>
+        <label style="display:flex;align-items:center;gap:8px;cursor:pointer;font-size:13px;">
+          <input type="checkbox" name="perm" value="ofertas" style="accent-color:var(--blue)"> Ofertas y promos
+        </label>
+        <label style="display:flex;align-items:center;gap:8px;cursor:pointer;font-size:13px;">
+          <input type="checkbox" name="perm" value="video" style="accent-color:var(--blue)"> Portada app
+        </label>
+        <label style="display:flex;align-items:center;gap:8px;cursor:pointer;font-size:13px;">
+          <input type="checkbox" name="perm" value="presupuestos" checked style="accent-color:var(--blue)"> Presupuestos
+        </label>
+        <label style="display:flex;align-items:center;gap:8px;cursor:pointer;font-size:13px;">
+          <input type="checkbox" name="perm" value="apk" style="accent-color:var(--blue)"> App APK
+        </label>
+        <label style="display:flex;align-items:center;gap:8px;cursor:pointer;font-size:13px;">
+          <input type="checkbox" name="perm" value="mapa" style="accent-color:var(--blue)"> Mapa dispositivos
+        </label>
+        <label style="display:flex;align-items:center;gap:8px;cursor:pointer;font-size:13px;">
+          <input type="checkbox" name="perm" value="vendedores" style="accent-color:var(--blue)"> Vendedores
+        </label>
+        <label style="display:flex;align-items:center;gap:8px;cursor:pointer;font-size:13px;">
+          <input type="checkbox" name="perm" value="sucursales" style="accent-color:var(--blue)"> Sucursales
+        </label>
+      </div>
+      <p style="font-size:11px;color:var(--text-3);margin-top:8px;">Dashboard siempre visible. Los admins tienen acceso completo sin importar estos checks.</p>
     </div>
   `, [
     { label:'Cancelar', cls:'btn-sm', action: closeModal },
@@ -2504,12 +2590,25 @@ function nuevoUsuario() {
   ]);
 }
 
+function togglePermisosPanel(rol) {
+  const panel = document.getElementById('permisos-panel');
+  if (panel) panel.style.display = rol === 'admin' ? 'none' : 'block';
+}
+
 async function crearUsuario() {
   const user = document.getElementById('u-user').value.trim();
   const pass = document.getElementById('u-pass').value.trim();
   const rol  = document.getElementById('u-rol').value;
   if (!user || !pass) { showToast('Usuario y contraseña obligatorios','error'); return; }
-  await sb('usuarios_admin', {method:'POST', prefer:'return=minimal', body:{username:user, password:pass, rol, activo:true}});
+  // Collect permissions
+  let permisos = null;
+  if (rol !== 'admin') {
+    const checks = document.querySelectorAll('input[name="perm"]:checked');
+    permisos = JSON.stringify(Array.from(checks).map(c => c.value));
+  }
+  const body = {username:user, password:pass, rol, activo:true};
+  if (permisos !== null) body.permisos = permisos;
+  await sb('usuarios_admin', {method:'POST', prefer:'return=minimal', body});
   closeModal(); renderUsuarios();
   showToast('Usuario creado','success');
 }
