@@ -395,6 +395,15 @@ const SB_URL = "https://ncagcvtkporoapumenoo.supabase.co";
 const SB_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im5jYWdjdnRrcG9yb2FwdW1lbm9vIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc4NDA4Mjg0NCwiZXhwIjoyMDk5NjU4ODQ0fQ.raziKoLpfqAgEvFvyQ9KaP2weKkGL_ksyWwEYQmX2Vc";
 
 // ══════════════════════════════════════════════
+// HELPERS DE PRECIO
+// ══════════════════════════════════════════════
+function roundMarkup(precio) {
+  // Aplica 5% y redondea al múltiplo de 10 más cercano
+  const conMarkup = precio * 1.05;
+  return Math.round(conMarkup / 10) * 10;
+}
+
+// ══════════════════════════════════════════════
 // STATE
 // ══════════════════════════════════════════════
 let currentUser = null;
@@ -2473,23 +2482,30 @@ async function editVendedor(id) {
 }
 
 async function guardarVendedor(id) {
-  await sb(`vendedores?id=eq.${id}`, {
-    method:'PATCH', prefer:'return=minimal',
-    body:{ nombre:document.getElementById('v-nombre').value.trim(), telefono:document.getElementById('v-tel').value.trim(), callmebot_apikey:document.getElementById('v-apikey').value.trim()||null }
-  });
-  // Actualizar sucursales en tabla intermedia
-  const checks = document.querySelectorAll('#v-suc-checks input[type=checkbox]');
-  const selIds = Array.from(checks).filter(c=>c.checked).map(c=>parseInt(c.value));
-  // Borrar asociaciones anteriores
-  await sb(`vendedor_sucursales?vendedor_id=eq.${id}`, {method:'DELETE', prefer:'return=minimal'});
-  // Insertar nuevas
-  if (selIds.length) {
-    await sb('vendedor_sucursales', {method:'POST', prefer:'return=minimal',
-      body: selIds.map(sid=>({vendedor_id:id, sucursal_id:sid}))
+  try {
+    await sb(`vendedores?id=eq.${id}`, {
+      method:'PATCH', prefer:'return=minimal',
+      body:{ nombre:document.getElementById('v-nombre').value.trim(), telefono:document.getElementById('v-tel').value.trim(), callmebot_apikey:document.getElementById('v-apikey').value.trim()||null }
     });
+    // Actualizar sucursales en tabla intermedia
+    const checks = document.querySelectorAll('#v-suc-checks input[type=checkbox]');
+    const selIds = Array.from(checks).filter(c=>c.checked).map(c=>parseInt(c.value));
+    // Borrar asociaciones anteriores (ignorar error si no había filas)
+    try {
+      await sb(`vendedor_sucursales?vendedor_id=eq.${id}`, {method:'DELETE', prefer:'return=minimal'});
+    } catch(e) {}
+    // Insertar nuevas una por una para evitar problemas con array en body
+    for (const sid of selIds) {
+      await sb('vendedor_sucursales', {method:'POST', prefer:'return=minimal',
+        body: {vendedor_id:id, sucursal_id:sid}
+      });
+    }
+    closeModal(); await loadBaseData(); renderVendedores();
+    showToast('Vendedor actualizado','success');
+  } catch(e) {
+    console.error('guardarVendedor error:', e);
+    showToast('Error al guardar: ' + (e.message||e), 'error');
   }
-  closeModal(); await loadBaseData(); renderVendedores();
-  showToast('Vendedor actualizado','success');
 }
 
 async function eliminarVendedor(id) {
